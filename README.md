@@ -1,11 +1,9 @@
-# iia-ia-bomberman
-Bomberman clone for AI teaching
-
-![Demo](https://github.com/dgomes/iia-ia-bomberman/raw/master/data/DemoBomberman.gif)
+# ia-digdug
+DigDug clone for AI teaching
 
 ## How to install
 
-Make sure you are running Python 3.5.
+Make sure you are running Python 3.11.
 
 `$ pip install -r requirements.txt`
 
@@ -27,9 +25,7 @@ to play using the sample client make sure the client pygame hidden window has fo
 
 Directions: arrows
 
-*A*: 'a' - detonates (only after picking up the detonator powerup)
-
-*B*: 'b' - drops bomb
+*A*: 'a' - pump enemies
 
 ## Debug Installation
 
@@ -38,7 +34,5 @@ Make sure pygame is properly installed:
 python -m pygame.examples.aliens
 
 # Tested on:
-- Ubuntu 18.04
-- OSX 10.14.6
-- Windows 10.0.18362
+- MacOS 13.6
 
