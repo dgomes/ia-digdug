@@ -14,13 +14,14 @@ class Tiles(IntEnum):
 
 
 VITAL_SPACE = 3
-
+MIN_CORRIDOR_LEN = 8
 
 class Map:
     def __init__(
         self,
         level=1,
         enemies=0,
+        rocks=0,
         size=(VITAL_SPACE + 10, VITAL_SPACE + 10),
         mapa=None,
         enemies_spawn=None,
@@ -33,7 +34,7 @@ class Map:
         self._size = size
         self.hor_tiles = size[0]
         self.ver_tiles = size[1]
-        self._stones = []
+        self._rocks = []
         self._digged = []
         if enemies_spawn:
             self._enemies_spawn = enemies_spawn
@@ -56,34 +57,37 @@ class Map:
                     ):  # give dig dug some room
                         if random.randint(0, 100) > 70 + 25 / level:
                             self.map[x][y] = Tiles.STONE
-                            self._stones.append((x, y))
 
             # create caves for enemies
             for e in range(self._level + 2):
                 if random.choice([True, False]):
                     # horizontal
-                    line = random.randrange(3, self.ver_tiles)
-                    offset = random.randrange(0, self.hor_tiles - 5)
-                    for x in range(5):
+                    line = random.randrange(VITAL_SPACE+1, self.ver_tiles)
+                    offset = random.randrange(0, self.hor_tiles - MIN_CORRIDOR_LEN)
+                    for x in range(MIN_CORRIDOR_LEN):
                         self.map[offset + x][line] = Tiles.PASSAGE
                     self._enemies_spawn.append((offset, line))
                     logger.debug(f"Spawn enemy at ({offset}, {line})")
                 else:
                     # vertical
                     column = random.randrange(0, self.hor_tiles)
-                    offset = random.randrange(0, self.ver_tiles - 5)
-                    for y in range(5):
+                    offset = random.randrange(0, self.ver_tiles - MIN_CORRIDOR_LEN)
+                    for y in range(MIN_CORRIDOR_LEN):
                         self.map[column][offset + y] = Tiles.PASSAGE
                     self._enemies_spawn.append((column, offset))
                     logger.debug(f"Spawn enemy at ({column}, {offset})")
 
+            # create rocks
+            for r in range(self._level):
+                x, y = random.randrange(0, self.hor_tiles), random.randrange(VITAL_SPACE+1, self.ver_tiles-VITAL_SPACE)
+                while self.map[x][y] != Tiles.STONE:
+                    x, y = random.randrange(0, self.hor_tiles), random.randrange(VITAL_SPACE+1, self.ver_tiles-VITAL_SPACE)
+                self._rocks.append((x, y))
+
         else:
             logger.info("Loading MAP")
             self.map = mapa
-            for x in range(self.hor_tiles):
-                for y in range(self.ver_tiles):
-                    if self.map[x][y] == Tiles.STONE and (x, y) != (1, 1):
-                        self._stones.append((x, y))
+
         self._digdug_spawn = (1, 1)  # Always true
 
     def __getstate__(self):
@@ -99,13 +103,6 @@ class Map:
     @property
     def stones(self):
         return self._stones
-
-    @stones.setter
-    def stones(self, stones):
-        self._stones = [(x, y) for x, y in stones]
-
-    def remove_stone(self, stone):
-        self._stones.remove(stone)
 
     @property
     def level(self):
@@ -141,8 +138,6 @@ class Map:
         x, y = pos
         if x not in range(self.hor_tiles) or y not in range(self.ver_tiles):
             return True
-        if self.map[x][y] in [Tiles.ROCK]:
-            return True
         if self.map[x][y] == Tiles.PASSAGE:
             return False
         if self.map[x][y] == Tiles.STONE:
@@ -151,15 +146,6 @@ class Map:
             else:
                 return True
         assert False, "Unknown tile type"
-        return True
-
-    def is_rock(self, pos):
-        x, y = pos
-        if (
-            x >= self.hor_tiles or y >= self.ver_tiles
-        ):  # everything outside of map is rock
-            return True
-        return self.map[x][y] in [Tiles.ROCK]
 
     def calc_pos(self, cur, direction: Direction, traverse=True):
         cx, cy = cur

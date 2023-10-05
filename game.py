@@ -3,7 +3,7 @@ import json
 import logging
 import math
 
-from characters import Fygar, Pooka, DigDug, Direction
+from characters import Fygar, Pooka, DigDug, Direction, Rock
 from mapa import Map, VITAL_SPACE
 
 logger = logging.getLogger("Game")
@@ -14,8 +14,10 @@ INITIAL_SCORE = 0
 TIMEOUT = 3000
 GAME_SPEED = 10
 MIN_BOMB_RADIUS = 3
-MAP_SIZE = (51, 31)
+MAP_SIZE = (32, 32)
 MAX_LEN_ROPE = 3
+
+ROCK_KILL_POINTS = 1000
 
 LEVEL_ENEMIES = {
     1: [Fygar] * 2 + [Pooka] * 1,
@@ -69,7 +71,6 @@ class Rope:
                 e.kill()  # Hit enemy with rope until it dies
                 return True
         return False
-
 
 class Game:
     def __init__(self, level=1, lives=LIVES, timeout=TIMEOUT, size=MAP_SIZE):
@@ -129,6 +130,7 @@ class Game:
             t(p) for t, p in zip(LEVEL_ENEMIES[level], self.map.enemies_spawn)
         ]
         logger.debug("Enemies: %s", [(e._name, e.pos) for e in self._enemies])
+        self._rocks = [Rock(p) for p in self.map._rocks]
 
     def quit(self):
         logger.debug("Quit")
@@ -150,14 +152,10 @@ class Game:
             else:
                 # if digdug moves we let go of the rope
                 if self._lastkeypress in "wasd" and self._lastkeypress != "":
-                    print(f"let go of rope: <{self._lastkeypress}>")
                     self._rope = Rope(self.map)
 
                 # Update position
-                self._digdug.pos = self.map.calc_pos(
-                    self._digdug.pos, key2direction(self._lastkeypress)
-                )  # don't bump into stones
-                self.map.dig(self._digdug.pos)
+                self._digdug.move(self.map, key2direction(self._lastkeypress), self._enemies, self._rocks)
 
         except AssertionError:
             logger.error(
@@ -189,6 +187,13 @@ class Game:
             if e.pos == self._digdug.pos:
                 self.kill_digdug()
                 e.respawn()
+        for r in self._rocks:
+            if r.pos == self._digdug.pos:
+                self.kill_digdug()
+            for e in self._enemies:
+                if r.pos == e.pos:
+                    e.kill(rock=True)
+                    self._score += e.points(self.map.ver_tiles)
 
     async def next_frame(self):
         await asyncio.sleep(1.0 / GAME_SPEED)
@@ -207,12 +212,16 @@ class Game:
             )
 
         self.update_digdug()
-        self.collision()
 
         for enemy in self._enemies:
             if enemy.alive:
-                enemy.move(self.map, self._digdug, self._enemies)
-        self._enemies = [e for e in self._enemies if e.alive]  # remove dead enemies
+                enemy.move(self.map, self._digdug, self._enemies, self._rocks)
+
+        for rock in self._rocks:
+            rock.move(self.map, digdug=self._digdug, rocks=self._rocks)
+        
+        self._score += sum([e.points(self.map.ver_tiles) for e in self._enemies if not e.alive])
+        self._enemies = [e for e in self._enemies if e.alive and not e.exit]  # remove dead and exited enemies
 
         self.collision()
 
@@ -227,10 +236,12 @@ class Game:
             "enemies": [
                 {"name": str(e), "id": str(e.id), "pos": e.pos} for e in self._enemies
             ],
+            "rocks": [
+                {"id": str(r.id), "pos": r.pos} for r in self._rocks
+            ]
         }
         if self._rope._pos:
             self._state["rope"] = {"dir": self._rope._dir, "pos": self._rope._pos}
-            print(self._state["rope"])
 
         return self._state
 
@@ -247,4 +258,5 @@ class Game:
             "timeout": TIMEOUT,
             "lives": LIVES,
             "score": self.score,
+            "level": self.map.level,
         }

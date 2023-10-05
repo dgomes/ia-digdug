@@ -34,10 +34,10 @@ FYGAR = {
     "right": (0, 15 * 16),
 }
 ROCK = {
-    "up": (0, 25 * 16),
-    "left": (0, 25 * 16),
-    "down": (2 * 16, 25 * 16),
-    "right": (0, 25 * 16),
+    0: (0, 24 * 16),
+    1: (16, 24 * 16),
+    2: (2 * 16, 24 * 16),
+    3: (3 * 16, 24 * 16),
 }
 
 ROPE_EDGE = {  # index are Directions
@@ -81,6 +81,12 @@ COLORS = {
     "grey": (120, 120, 120),
 }
 BACKGROUND_COLOR = (0, 0, 0)
+BACKGROUND_GROUND_LAYER = (222, 204, 166)
+BACKGROUND_MIDDLE_LAYER =  (148, 91, 20)
+BACKGROUND_BOTTOM_LAYER = (112, 100, 84)
+BACKGROUND_BED_LAYER = (56, 29, 10)
+
+
 RANKS = {
     1: "1ST",
     2: "2ND",
@@ -115,6 +121,7 @@ class Artifact(pygame.sprite.Sprite):
         self.x, self.y = None, None  # postpone to update_sprite()
 
         x, y = kw.pop("pos", ((kw.pop("x", 0), kw.pop("y", 0))))
+
         new_pos = scale((x, y))
         self.image = pygame.Surface(CHAR_SIZE)
         self.rect = pygame.Rect(new_pos + CHAR_SIZE)
@@ -130,10 +137,17 @@ class Artifact(pygame.sprite.Sprite):
         self.image.fill((0, 0, 230))
         self.image.blit(*self.sprite)
         # self.image = pygame.transform.scale(self.image, scale((1, 1)))
+        self.image.set_colorkey((108,7,0))
         self.x, self.y = pos
 
     def update(self, *args):
         self.update_sprite()
+
+
+class Rock(Artifact):
+    def __init__(self, *args, **kw):
+        self.sprite = (SPRITES, (0, 0), (*ROCK[0], *scale((1, 1))))
+        super().__init__(*args, **kw)
 
 
 class Rope(Artifact):
@@ -165,8 +179,6 @@ class Rope(Artifact):
             self.rect = pygame.Rect(
                 scale(pos[0]) + (column * CHAR_LENGTH, line * CHAR_LENGTH)
             )
-
-        print(pos, self.rect)
 
         self.image.fill((0, 0, 230))
         for p in range(len(pos)):
@@ -234,87 +246,6 @@ class Enemy(Artifact):
         self.update_sprite(new_pos)
 
 
-class Bomb(Artifact):
-    def __init__(self, *args, **kw):
-        self.index = 0
-        self.sprite = (SPRITES, (0, 0), (*BOMB[self.index], *scale((1, 1))))
-        self.exploded = False
-        self.timeout = kw.pop("timeout", -1)
-        self.radius = kw.pop("radius", 0)
-        super().__init__(*args, **kw)
-
-    def update(self, bombs_state):
-        for pos, timeout, radius in bombs_state:
-            if scale(pos) == (self.x, self.y):
-                # It's me!
-                self.timeout = int(timeout)
-                self.radius = radius
-                self.index = (self.index + 1) % len(BOMB)
-                self.sprite = (SPRITES, (0, 0), (*BOMB[self.index], *scale((1, 1))))
-                self.update_sprite()
-        if self.timeout == 0:
-            self.exploded = True
-            self.sprite = ()
-
-            self.rect.inflate_ip(
-                self.radius * 2 * CHAR_LENGTH, self.radius * 2 * CHAR_LENGTH
-            )
-
-            self.image = pygame.Surface(
-                (
-                    self.radius * 2 * CHAR_LENGTH + CHAR_LENGTH,
-                    self.radius * 2 * CHAR_LENGTH + CHAR_LENGTH,
-                )
-            )
-            self.image.set_colorkey((0, 0, 0))
-            self.image.blit(
-                SPRITES,
-                scale((self.radius, self.radius)),
-                (*EXPLOSION["c"], *scale((1, 1))),
-            )
-            for r in range(1, self.radius):
-                self.image.blit(
-                    SPRITES,
-                    scale((self.radius - r, self.radius)),
-                    (*EXPLOSION["l"], *scale((1, 1))),
-                )
-                self.image.blit(
-                    SPRITES,
-                    scale((self.radius + r, self.radius)),
-                    (*EXPLOSION["r"], *scale((1, 1))),
-                )
-                self.image.blit(
-                    SPRITES,
-                    scale((self.radius, self.radius - r)),
-                    (*EXPLOSION["u"], *scale((1, 1))),
-                )
-                self.image.blit(
-                    SPRITES,
-                    scale((self.radius, self.radius + r)),
-                    (*EXPLOSION["d"], *scale((1, 1))),
-                )
-            self.image.blit(
-                SPRITES, scale((0, self.radius)), (*EXPLOSION["xl"], *scale((1, 1)))
-            )
-            self.image.blit(
-                SPRITES,
-                scale((2 * self.radius, self.radius)),
-                (*EXPLOSION["xr"], *scale((1, 1))),
-            )
-            self.image.blit(
-                SPRITES, scale((self.radius, 0)), (*EXPLOSION["xu"], *scale((1, 1)))
-            )
-            self.image.blit(
-                SPRITES,
-                scale((self.radius, 2 * self.radius)),
-                (*EXPLOSION["xd"], *scale((1, 1))),
-            )
-
-
-class Wall(Artifact):
-    def __init__(self, *args, **kw):
-        self.sprite = (SPRITES, (0, 0), (*WALL, *scale((1, 1))))
-        super().__init__(*args, **kw)
 
 
 def clear_callback(surf, rect):
@@ -334,7 +265,14 @@ def draw_background(mapa):
         for y in range(int(mapa.size[1])):
             wx, wy = scale((x, y))
             if mapa.map[x][y] == Tiles.STONE:
-                background.blit(SPRITES, (wx, wy), (*STONE, *scale((1, 1))))
+                if y < mapa.ver_tiles / 4:
+                    pygame.draw.rect(background, BACKGROUND_GROUND_LAYER, (wx, wy, *scale((1, 1))))
+                elif y < mapa.ver_tiles / 2:
+                    pygame.draw.rect(background, BACKGROUND_MIDDLE_LAYER, (wx, wy, *scale((1, 1))))
+                elif y < mapa.ver_tiles * 3 / 4:
+                    pygame.draw.rect(background, BACKGROUND_BOTTOM_LAYER, (wx, wy, *scale((1, 1))))
+                else:
+                    pygame.draw.rect(background, BACKGROUND_BED_LAYER, (wx, wy, *scale((1, 1))))
             else:
                 pygame.draw.rect(background, BACKGROUND_COLOR, (wx, wy, *scale((1, 1))))
     return background
@@ -371,7 +309,6 @@ async def main_game():
     main_group = pygame.sprite.LayeredUpdates()
     rope_group = pygame.sprite.OrderedUpdates()
     enemies_group = pygame.sprite.OrderedUpdates()
-    stones_group = pygame.sprite.OrderedUpdates()
 
     logging.info("Waiting for map information from server")
     state = await q.get()  # first state message includes map information
@@ -444,10 +381,9 @@ async def main_game():
             for enemy in state["enemies"]:
                 enemies_group.add(Enemy(name=enemy["name"], pos=enemy["pos"]))
 
-        if "stones" in state:
-            stones_group.empty()
-            for stone in state["stones"]:
-                stones_group.add(Wall(pos=stone))
+        if "rocks" in state:
+            for rock in state["rocks"]:
+                enemies_group.add(Rock(pos=rock["pos"]))
 
         if "rope" in state:
             if len(rope_group) == 0:
@@ -459,7 +395,6 @@ async def main_game():
         if "digdug" in state:
             main_group.update(state["digdug"])
 
-        stones_group.draw(SCREEN)
         main_group.draw(SCREEN)
         enemies_group.draw(SCREEN)
         rope_group.draw(SCREEN)
@@ -525,15 +460,16 @@ async def main_game():
             state = json.loads(q.get_nowait())
 
             if (
-                "step" in state
-                and state["step"] == 1
-                or "level" in state
-                and state["level"] != mapa.level
+                "size" in state and "map" in state
             ):
+                print(state)
                 # New level! lets clean everything up!
+                logger.info("New level! %s", state["level"])
+                mapa = Map(size=state["size"], mapa=state["map"])
+                BACKGROUND = draw_background(mapa)
+
                 SCREEN.blit(BACKGROUND, (0, 0))
 
-                stones_group.empty()
                 main_group.empty()
                 enemies_group.empty()
                 rope_group.empty()
