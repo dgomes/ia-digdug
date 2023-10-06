@@ -2,10 +2,10 @@ import asyncio
 import json
 import logging
 import math
-
-from characters import Fygar, Pooka, DigDug, Direction, Rock
-from mapa import Map, VITAL_SPACE
 import random
+
+from characters import DigDug, Direction, Fygar, Pooka, Rock
+from mapa import VITAL_SPACE, Map
 
 logger = logging.getLogger("Game")
 logger.setLevel(logging.DEBUG)
@@ -14,15 +14,16 @@ LIVES = 3
 INITIAL_SCORE = 0
 TIMEOUT = 3000
 GAME_SPEED = 10
-MIN_BOMB_RADIUS = 3
 MAP_SIZE = (48, 24)
 MAX_LEN_ROPE = 3
+MIN_ENEMIES = 3
 
 ROCK_KILL_POINTS = 1000
 
+
 def level_enemies(level):
-    level += 3
-    fygars = random.randrange(1, level//2)
+    level += MIN_ENEMIES
+    fygars = random.randrange(1, level // 2)
     pookas = level - fygars
     return [Fygar] * fygars + [Pooka] * pookas
 

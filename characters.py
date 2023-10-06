@@ -1,22 +1,23 @@
+import logging
+import math
+import random
+import uuid
+
 from consts import (
-    Speed,
-    Smart,
-    Direction,
+    BED_POINTS,
+    BOTTOM_POINTS,
+    ENEMY_HEAL,
     GROUND_POINTS,
     MIDDLE_POINTS,
-    BOTTOM_POINTS,
-    BED_POINTS,
     ROCK_KILL_POINTS,
-    ENEMY_HEAL,
+    Direction,
+    Smart,
+    Speed,
 )
-import uuid
-import math
-import logging
-import random
+from mapa import VITAL_SPACE
 
 LOGGER = logging.getLogger("Map")
 
-from mapa import VITAL_SPACE
 
 DIR = "wasd"
 DEFAULT_LIVES = 3

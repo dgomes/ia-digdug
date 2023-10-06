@@ -1,7 +1,8 @@
 import logging
 import random
-from consts import Direction
 from enum import IntEnum
+
+from consts import Direction
 
 logger = logging.getLogger("Map")
 logger.setLevel(logging.DEBUG)

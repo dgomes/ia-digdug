@@ -1,11 +1,12 @@
-import os
-import asyncio
-import pygame
-import json
-import asyncio
-import websockets
-import logging
 import argparse
+import asyncio
+import json
+import logging
+import os
+
+import pygame
+import websockets
+
 from mapa import Map, Tiles
 
 logging.basicConfig(level=logging.DEBUG)
