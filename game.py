@@ -14,7 +14,7 @@ INITIAL_SCORE = 0
 TIMEOUT = 3000
 GAME_SPEED = 10
 MIN_BOMB_RADIUS = 3
-MAP_SIZE = (32, 32)
+MAP_SIZE = (48, 24)
 MAX_LEN_ROPE = 3
 
 ROCK_KILL_POINTS = 1000
@@ -115,11 +115,6 @@ class Game:
         self._running = False
 
     def next_level(self, level):
-        """if level > len(LEVEL_ENEMIES):
-        logger.info("You WIN!")
-        self.stop()
-        return"""
-
         logger.info("NEXT LEVEL")
         self.map = Map(level=level, size=self.map.size)
         self._digdug.respawn()
@@ -164,7 +159,7 @@ class Game:
         finally:
             self._lastkeypress = ""  # remove inertia
 
-        if len(self._enemies) < 0:  # TODO change to == 0
+        if len(self._enemies) == 0:
             logger.info(f"Level {self.map.level} completed")
             self.next_level(self.map.level + 1)
 

@@ -140,14 +140,15 @@ class GameServer:
                 self.game = Game()
                 self.game.start(self.current_player.name)
 
-                game_info = self.game.info()
-                await self.send_info(game_info)
-
                 if self.grading:
                     game_record = {}
                     game_record["player"] = self.current_player.name
 
                 while self.game.running:
+                    if self.game._step == 0:
+                        game_info = self.game.info()
+                        await self.send_info(game_info)
+
                     state = await self.game.next_frame()
                     state["player"] = self.current_player.name
 
