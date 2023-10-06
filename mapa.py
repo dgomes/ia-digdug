@@ -107,10 +107,6 @@ class Map:
         return self._size
 
     @property
-    def stones(self):
-        return self._stones
-
-    @property
     def level(self):
         return self._level
 

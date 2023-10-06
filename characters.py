@@ -24,26 +24,6 @@ DEFAULT_LIVES = 3
 MIN_ENEMY_LIFE = DEFAULT_LIVES
 
 
-def distance(p1, p2):
-    LOGGER.warn("please use math.dist")
-    return math.dist(p1, p2)
-
-
-def vector2dir(vx, vy):
-    m = max(abs(vx), abs(vy))
-    if m == abs(vx):
-        if vx < 0:
-            d = 1  # a
-        else:
-            d = 3  # d
-    else:
-        if vy > 0:
-            d = 2  # s
-        else:
-            d = 0  # w
-    return d
-
-
 class Character:
     def __init__(self, x=1, y=1):
         self._pos = x, y
@@ -132,7 +112,7 @@ class DigDug(Character):
 
 
 class Enemy(Character):
-    def __init__(self, pos, name, speed, smart, wallpass):
+    def __init__(self, pos, name, speed, smart, wallpass, lives=MIN_ENEMY_LIFE):
         self._name = name
         self.id = uuid.uuid4()
         self._speed = speed
@@ -143,7 +123,7 @@ class Enemy(Character):
         self.lastdir = Direction.EAST
         self.lastpos = None
         self.wander = 0
-        self._alive = MIN_ENEMY_LIFE  # TODO increase according to level
+        self._alive = lives  # TODO increase according to level
         self.exit = False
         self._points = None
         super().__init__(*pos)
@@ -209,7 +189,7 @@ class Enemy(Character):
                 new_pos = self.lastpos
             else:
                 next_pos = sorted(
-                    open_pos, key=lambda pos: distance(digdug.pos, pos), reverse=True
+                    open_pos, key=lambda pos: math.dist(digdug.pos, pos), reverse=True
                 )
                 new_pos = next_pos[0]
 

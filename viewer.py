@@ -51,21 +51,6 @@ ROPE_EDGE = {  # index are Directions
 ENEMIES = {"Pooka": POOKA, "Fygar": FYGAR, "Rock": ROCK}
 
 STONE = (10 * 16, 0)
-WALL = (64, 48)
-PASSAGE = (0, 64)
-EXIT = (11 * 16, 3 * 16)
-BOMB = [(32, 48), (16, 48), (0, 48)]
-EXPLOSION = {
-    "c": (112, 96),
-    "l": (96, 96),
-    "r": (128, 96),
-    "u": (112, 80),
-    "d": (112, 112),
-    "xl": (80, 96),
-    "xr": (144, 96),
-    "xu": (112, 64),
-    "xd": (112, 128),
-}
 FALLOUT = {"c": (32, 96)}
 
 CHAR_LENGTH = 16
@@ -111,10 +96,6 @@ async def messages_handler(ws_path, queue):
         while True:
             r = await websocket.recv()
             queue.put_nowait(r)
-
-
-class GameOver(BaseException):
-    pass
 
 
 class Artifact(pygame.sprite.Sprite):
@@ -249,7 +230,6 @@ class Enemy(Artifact):
 
 def clear_callback(surf, rect):
     """beneath everything there is a passage."""
-    # surf.blit(SPRITES, (rect.x, rect.y), (*PASSAGE, rect.width, rect.height))
     pygame.draw.rect(surf, BACKGROUND_COLOR, rect)
 
 

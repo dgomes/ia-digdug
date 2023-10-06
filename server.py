@@ -58,7 +58,7 @@ class GameServer:
 
         logger.debug("Save highscores")
         logger.info(
-            "%s FINAL SCORE <%s>",
+            "Saving: %s <%s>",
             self.current_player.name,
             score,
         )

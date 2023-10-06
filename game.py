@@ -96,7 +96,15 @@ class Game:
 
     @property
     def score(self):
-        return self._score
+        bonus_score = (
+            self._score
+            + (self.map.level * TIMEOUT - self._total_steps) // 10
+            + self._digdug.lives * 1000
+        )
+        logger.info(
+            f"FINAL SCORE with bonus for efficiency and survivability: {bonus_score}"
+        )
+        return bonus_score
 
     @property
     def total_steps(self):
@@ -249,11 +257,6 @@ class Game:
             self._state["rope"] = {"dir": self._rope._dir, "pos": self._rope._pos}
 
         return self._state
-
-    @property
-    def json_state(self):
-        # logger.debug(self._state)
-        return json.dumps(self._state)
 
     def info(self):
         return {
