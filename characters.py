@@ -1,4 +1,14 @@
-from consts import Speed, Smart, Direction, GROUND_POINTS, MIDDLE_POINTS, BOTTOM_POINTS, BED_POINTS, ROCK_KILL_POINTS, ENEMY_HEAL
+from consts import (
+    Speed,
+    Smart,
+    Direction,
+    GROUND_POINTS,
+    MIDDLE_POINTS,
+    BOTTOM_POINTS,
+    BED_POINTS,
+    ROCK_KILL_POINTS,
+    ENEMY_HEAL,
+)
 import uuid
 import math
 import logging
@@ -11,6 +21,7 @@ from mapa import VITAL_SPACE
 DIR = "wasd"
 DEFAULT_LIVES = 3
 MIN_ENEMY_LIFE = DEFAULT_LIVES
+
 
 def distance(p1, p2):
     LOGGER.warn("please use math.dist")
@@ -77,11 +88,11 @@ class Rock(Character):
     def __init__(self, pos):
         super().__init__(*pos)
         self.id = uuid.uuid4()
-        self._falling = random.randint(3, 9)    #we never known when the rock will fall
+        self._falling = random.randint(3, 9)  # we never known when the rock will fall
 
     def move(self, mapa, digdug, rocks):
         open_pos = mapa.calc_pos(self.pos, Direction.SOUTH, traverse=False)
-        if open_pos in [r.pos for r in rocks]: #don't fall on other rocks
+        if open_pos in [r.pos for r in rocks]:  # don't fall on other rocks
             return
 
         if digdug.pos == open_pos and self._falling > 0:
@@ -89,7 +100,9 @@ class Rock(Character):
             return
 
         if self.pos != open_pos:
-            self._falling = random.randint(3, 9)    #we never known when the rock will fall
+            self._falling = random.randint(
+                3, 9
+            )  # we never known when the rock will fall
 
         self.pos = open_pos
 
@@ -110,14 +123,12 @@ class DigDug(Character):
         self._lives -= 1
 
     def move(self, mapa, direction, enemies, rocks):
-        new_pos = mapa.calc_pos(
-            self.pos, direction
-        )  
+        new_pos = mapa.calc_pos(self.pos, direction)
 
-        if new_pos not in [r.pos for r in rocks]: # don't bump into rocks
+        if new_pos not in [r.pos for r in rocks]:  # don't bump into rocks
             self.pos = new_pos
             mapa.dig(self.pos)
-    
+
 
 class Enemy(Character):
     def __init__(self, pos, name, speed, smart, wallpass):
@@ -142,7 +153,7 @@ class Enemy(Character):
     def points(self, map_height):
         if self._points:
             return self._points
-        
+
         _, y = self.pos
         if y < map_height / 4:
             return GROUND_POINTS
@@ -154,7 +165,7 @@ class Enemy(Character):
             return BED_POINTS
 
     def kill(self, rock=False):
-        if rock:    #kill immediately
+        if rock:  # kill immediately
             self._points = ROCK_KILL_POINTS
             self._alive = 0
 
@@ -171,17 +182,17 @@ class Enemy(Character):
     def move(self, mapa, digdug, enemies, rocks):
         if not self.ready():
             return
-        
+
         if self._alive < MIN_ENEMY_LIFE:
-            self._alive += random.choice(ENEMY_HEAL*[0] + [1])  # Give it a chance to come back to life
+            self._alive += random.choice(
+                ENEMY_HEAL * [0] + [1]
+            )  # Give it a chance to come back to life
             return
 
         if self._smart == Smart.LOW:
-            new_pos = mapa.calc_pos(
-                self.pos, self.dir[self.lastdir], self._wallpass
-            ) 
-            if new_pos in [r.pos for r in rocks]:   #don't bump into rocks
-                new_pos = self.pos 
+            new_pos = mapa.calc_pos(self.pos, self.dir[self.lastdir], self._wallpass)
+            if new_pos in [r.pos for r in rocks]:  # don't bump into rocks
+                new_pos = self.pos
             if new_pos == self.pos:
                 self.lastdir = (self.lastdir + 1) % len(self.dir)
 
@@ -190,7 +201,8 @@ class Enemy(Character):
             open_pos = [
                 pos
                 for pos in [mapa.calc_pos(self.pos, d, self._wallpass) for d in DIR]
-                if pos not in [self.lastpos] + enemies_pos and pos not in [r.pos for r in rocks]    #don't bump into rocks
+                if pos not in [self.lastpos] + enemies_pos
+                and pos not in [r.pos for r in rocks]  # don't bump into rocks
             ]
             if open_pos == []:
                 new_pos = self.lastpos
@@ -205,7 +217,8 @@ class Enemy(Character):
             open_pos = [
                 pos
                 for pos in [mapa.calc_pos(self.pos, d, self._wallpass) for d in DIR]
-                if pos not in [self.lastpos] + enemies_pos and pos not in [r.pos for r in rocks]    #don't bump into rocks
+                if pos not in [self.lastpos] + enemies_pos
+                and pos not in [r.pos for r in rocks]  # don't bump into rocks
             ]
             if open_pos == []:
                 new_pos = self.lastpos
@@ -219,7 +232,6 @@ class Enemy(Character):
             self.exit = True
             LOGGER.debug("%s has EXITED", self.id, self.pos[1])
 
-
     def ready(self):
         self.step += int(self._speed)
         if self.step >= int(Speed.FAST):
@@ -230,17 +242,13 @@ class Enemy(Character):
 
 class Pooka(Enemy):
     def __init__(self, pos):
-        super().__init__(
-            pos, self.__class__.__name__, Speed.FAST, Smart.LOW, False
-        )
+        super().__init__(pos, self.__class__.__name__, Speed.FAST, Smart.LOW, False)
 
 
 class Fygar(Enemy):
     def __init__(self, pos):
-        super().__init__(
-            pos, self.__class__.__name__, Speed.SLOW, Smart.LOW, False
-        )
-    
+        super().__init__(pos, self.__class__.__name__, Speed.SLOW, Smart.LOW, False)
+
     def points(self, map_height):
         if self.lastdir in [Direction.EAST, Direction.WEST]:
             return super().points(map_height) * 2

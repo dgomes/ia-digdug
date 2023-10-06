@@ -16,6 +16,7 @@ class Tiles(IntEnum):
 VITAL_SPACE = 3
 MIN_CORRIDOR_LEN = 8
 
+
 class Map:
     def __init__(
         self,
@@ -62,7 +63,7 @@ class Map:
             for e in range(self._level + 2):
                 if random.choice([True, False]):
                     # horizontal
-                    line = random.randrange(VITAL_SPACE+1, self.ver_tiles)
+                    line = random.randrange(VITAL_SPACE + 1, self.ver_tiles)
                     offset = random.randrange(0, self.hor_tiles - MIN_CORRIDOR_LEN)
                     for x in range(MIN_CORRIDOR_LEN):
                         self.map[offset + x][line] = Tiles.PASSAGE
@@ -79,9 +80,13 @@ class Map:
 
             # create rocks
             for r in range(self._level):
-                x, y = random.randrange(0, self.hor_tiles), random.randrange(VITAL_SPACE+1, self.ver_tiles-VITAL_SPACE)
+                x, y = random.randrange(0, self.hor_tiles), random.randrange(
+                    VITAL_SPACE + 1, self.ver_tiles - VITAL_SPACE
+                )
                 while self.map[x][y] != Tiles.STONE:
-                    x, y = random.randrange(0, self.hor_tiles), random.randrange(VITAL_SPACE+1, self.ver_tiles-VITAL_SPACE)
+                    x, y = random.randrange(0, self.hor_tiles), random.randrange(
+                        VITAL_SPACE + 1, self.ver_tiles - VITAL_SPACE
+                    )
                 self._rocks.append((x, y))
 
         else:

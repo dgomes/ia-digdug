@@ -72,6 +72,7 @@ class Rope:
                 return True
         return False
 
+
 class Game:
     def __init__(self, level=1, lives=LIVES, timeout=TIMEOUT, size=MAP_SIZE):
         logger.info(f"Game(level={level}, lives={lives})")
@@ -150,7 +151,12 @@ class Game:
                     self._rope = Rope(self.map)
 
                 # Update position
-                self._digdug.move(self.map, key2direction(self._lastkeypress), self._enemies, self._rocks)
+                self._digdug.move(
+                    self.map,
+                    key2direction(self._lastkeypress),
+                    self._enemies,
+                    self._rocks,
+                )
 
         except AssertionError:
             logger.error(
@@ -214,9 +220,13 @@ class Game:
 
         for rock in self._rocks:
             rock.move(self.map, digdug=self._digdug, rocks=self._rocks)
-        
-        self._score += sum([e.points(self.map.ver_tiles) for e in self._enemies if not e.alive])
-        self._enemies = [e for e in self._enemies if e.alive and not e.exit]  # remove dead and exited enemies
+
+        self._score += sum(
+            [e.points(self.map.ver_tiles) for e in self._enemies if not e.alive]
+        )
+        self._enemies = [
+            e for e in self._enemies if e.alive and not e.exit
+        ]  # remove dead and exited enemies
 
         self.collision()
 
@@ -231,9 +241,7 @@ class Game:
             "enemies": [
                 {"name": str(e), "id": str(e.id), "pos": e.pos} for e in self._enemies
             ],
-            "rocks": [
-                {"id": str(r.id), "pos": r.pos} for r in self._rocks
-            ]
+            "rocks": [{"id": str(r.id), "pos": r.pos} for r in self._rocks],
         }
         if self._rope._pos:
             self._state["rope"] = {"dir": self._rope._dir, "pos": self._rope._pos}

@@ -82,7 +82,7 @@ COLORS = {
 }
 BACKGROUND_COLOR = (0, 0, 0)
 BACKGROUND_GROUND_LAYER = (222, 204, 166)
-BACKGROUND_MIDDLE_LAYER =  (148, 91, 20)
+BACKGROUND_MIDDLE_LAYER = (148, 91, 20)
 BACKGROUND_BOTTOM_LAYER = (112, 100, 84)
 BACKGROUND_BED_LAYER = (56, 29, 10)
 
@@ -137,7 +137,7 @@ class Artifact(pygame.sprite.Sprite):
         self.image.fill((0, 0, 230))
         self.image.blit(*self.sprite)
         # self.image = pygame.transform.scale(self.image, scale((1, 1)))
-        self.image.set_colorkey((108,7,0))
+        self.image.set_colorkey((108, 7, 0))
         self.x, self.y = pos
 
     def update(self, *args):
@@ -246,8 +246,6 @@ class Enemy(Artifact):
         self.update_sprite(new_pos)
 
 
-
-
 def clear_callback(surf, rect):
     """beneath everything there is a passage."""
     # surf.blit(SPRITES, (rect.x, rect.y), (*PASSAGE, rect.width, rect.height))
@@ -266,13 +264,21 @@ def draw_background(mapa):
             wx, wy = scale((x, y))
             if mapa.map[x][y] == Tiles.STONE:
                 if y < mapa.ver_tiles / 4:
-                    pygame.draw.rect(background, BACKGROUND_GROUND_LAYER, (wx, wy, *scale((1, 1))))
+                    pygame.draw.rect(
+                        background, BACKGROUND_GROUND_LAYER, (wx, wy, *scale((1, 1)))
+                    )
                 elif y < mapa.ver_tiles / 2:
-                    pygame.draw.rect(background, BACKGROUND_MIDDLE_LAYER, (wx, wy, *scale((1, 1))))
+                    pygame.draw.rect(
+                        background, BACKGROUND_MIDDLE_LAYER, (wx, wy, *scale((1, 1)))
+                    )
                 elif y < mapa.ver_tiles * 3 / 4:
-                    pygame.draw.rect(background, BACKGROUND_BOTTOM_LAYER, (wx, wy, *scale((1, 1))))
+                    pygame.draw.rect(
+                        background, BACKGROUND_BOTTOM_LAYER, (wx, wy, *scale((1, 1)))
+                    )
                 else:
-                    pygame.draw.rect(background, BACKGROUND_BED_LAYER, (wx, wy, *scale((1, 1))))
+                    pygame.draw.rect(
+                        background, BACKGROUND_BED_LAYER, (wx, wy, *scale((1, 1)))
+                    )
             else:
                 pygame.draw.rect(background, BACKGROUND_COLOR, (wx, wy, *scale((1, 1))))
     return background
@@ -459,9 +465,7 @@ async def main_game():
         try:
             state = json.loads(q.get_nowait())
 
-            if (
-                "size" in state and "map" in state
-            ):
+            if "size" in state and "map" in state:
                 print(state)
                 # New level! lets clean everything up!
                 logger.info("New level! %s", state["level"])
