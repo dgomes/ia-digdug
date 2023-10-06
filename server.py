@@ -145,7 +145,7 @@ class GameServer:
                     game_record["player"] = self.current_player.name
 
                 while self.game.running:
-                    if self.game._step == 0:
+                    if self.game._step == 0:    #Starting a level ? Let's send the info
                         game_info = self.game.info()
                         await self.send_info(game_info)
 

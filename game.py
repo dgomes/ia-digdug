@@ -5,6 +5,7 @@ import math
 
 from characters import Fygar, Pooka, DigDug, Direction, Rock
 from mapa import Map, VITAL_SPACE
+import random
 
 logger = logging.getLogger("Game")
 logger.setLevel(logging.DEBUG)
@@ -19,11 +20,11 @@ MAX_LEN_ROPE = 3
 
 ROCK_KILL_POINTS = 1000
 
-LEVEL_ENEMIES = {
-    1: [Fygar] * 2 + [Pooka] * 1,
-    2: [Fygar] * 3 + [Pooka] * 2,
-    3: [Fygar] * 5 + [Pooka] * 2,
-}
+def level_enemies(level):
+    level += 3
+    fygars = random.randrange(1, level//2)
+    pookas = level - fygars
+    return [Fygar] * fygars + [Pooka] * pookas
 
 
 def key2direction(key):
@@ -123,7 +124,7 @@ class Game:
         self._step = 0
         self._lastkeypress = ""
         self._enemies = [
-            t(p) for t, p in zip(LEVEL_ENEMIES[level], self.map.enemies_spawn)
+            t(p) for t, p in zip(level_enemies(level), self.map.enemies_spawn)
         ]
         logger.debug("Enemies: %s", [(e._name, e.pos) for e in self._enemies])
         self._rocks = [Rock(p) for p in self.map._rocks]
