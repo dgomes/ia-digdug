@@ -65,11 +65,14 @@ class Rope:
 
         self._dir = direction
         if len(self._pos) > MAX_LEN_ROPE:
-            self._pos = []
+            self._pos.pop()
 
     def hit(self, enemies):
+        if self._pos == []: #can hit only if rope is out
+            return False
+        
         for e in enemies:
-            if e.pos in self._pos:
+            if e.pos == self._pos[-1]:
                 e.kill()  # Hit enemy with rope until it dies
                 return True
         return False
