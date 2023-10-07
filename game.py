@@ -1,14 +1,14 @@
 import asyncio
-import json
 import logging
 import math
 import random
 
 from characters import DigDug, Direction, Fygar, Pooka, Rock
 from mapa import VITAL_SPACE, Map
+from consts import Smart
 
 logger = logging.getLogger("Game")
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 LIVES = 3
 INITIAL_SCORE = 0
@@ -73,7 +73,12 @@ class Rope:
 
         for e in enemies:
             if e.pos in self._pos:
-                e.kill()  # Hit enemy with rope until it dies
+                e.kill() # kill enemy
+
+                #remove rope after hit
+                rope_index = self._pos.index(e.pos)
+                self._pos = self._pos[:rope_index + 1]
+
                 return True
         return False
 
@@ -136,7 +141,13 @@ class Game:
         self._step = 0
         self._lastkeypress = ""
         self._enemies = [
-            t(p) for t, p in zip(level_enemies(level), self.map.enemies_spawn)
+            enemy(
+                pos,
+                smart=random.choices(
+                    list(Smart), [1, level // 10, level // 20], k=1
+                )[0],
+            )
+            for enemy, pos in zip(level_enemies(level), self.map.enemies_spawn)
         ]
         logger.debug("Enemies: %s", [(e._name, e.pos) for e in self._enemies])
         self._rocks = [Rock(p) for p in self.map._rocks]
@@ -157,7 +168,7 @@ class Game:
                 if self._lastkeypress in "AB":
                     self._rope.shoot(self._digdug.pos, self._digdug.direction)
                     if self._rope.hit(self._enemies):
-                        self._rope = Rope(self.map)
+                        logger.debug("Enemy hit with rope")
             else:
                 # if digdug moves we let go of the rope
                 if self._lastkeypress in "wasd" and self._lastkeypress != "":

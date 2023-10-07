@@ -18,8 +18,8 @@ from mapa import VITAL_SPACE
 
 LOGGER = logging.getLogger("Map")
 
+WALLPASS_ODD = {Smart.LOW: 0.01, Smart.NORMAL: 0.2, Smart.HIGH: 0.5}
 
-DIR = "wasd"
 DEFAULT_LIVES = 3
 MIN_ENEMY_LIFE = DEFAULT_LIVES
 
@@ -185,14 +185,15 @@ class Enemy(Character):
             if new_pos in [r.pos for r in rocks]:  # don't bump into rocks
                 new_pos = self.pos
             if new_pos == self.pos:
-                self.lastdir = (self.lastdir + 1) % len(self.dir)
+                self.lastdir = (self.lastdir + random.randint(1, 4)) % len(self.dir)
 
         elif self._smart == Smart.NORMAL:
-            enemies_pos = [e.pos for e in enemies if e.id != self.id]
             open_pos = [
                 pos
-                for pos in [mapa.calc_pos(self.pos, d, self._wallpass) for d in DIR]
-                if pos not in [self.lastpos] + enemies_pos
+                for pos in [
+                    mapa.calc_pos(self.pos, d, self._wallpass) for d in Direction
+                ]
+                if pos not in [self.lastpos]
                 and pos not in [r.pos for r in rocks]  # don't bump into rocks
             ]
             if open_pos == []:
@@ -207,15 +208,17 @@ class Enemy(Character):
             enemies_pos = [e.pos for e in enemies if e.id != self.id]
             open_pos = [
                 pos
-                for pos in [mapa.calc_pos(self.pos, d, self._wallpass) for d in DIR]
+                for pos in [
+                    mapa.calc_pos(self.pos, d, self._wallpass) for d in Direction
+                ]
                 if pos not in [self.lastpos] + enemies_pos
                 and pos not in [r.pos for r in rocks]  # don't bump into rocks
             ]
             if open_pos == []:
                 new_pos = self.lastpos
             else:
-                new_pos = open_pos[0]
-
+                next_pos = sorted(open_pos, key=lambda pos: math.dist(digdug.pos, pos))
+                new_pos = next_pos[0]
         self.lastpos = self.pos
         self.pos = new_pos
 
@@ -232,22 +235,43 @@ class Enemy(Character):
 
 
 class Pooka(Enemy):
-    def __init__(self, pos):
-        super().__init__(pos, self.__class__.__name__, Speed.FAST, Smart.LOW, False)
+    def __init__(self, pos, smart=Smart.NORMAL):
+        super().__init__(pos, self.__class__.__name__, Speed.FAST, smart, False)
+        self.go_to_corridor = pos
+
     def move(self, mapa, digdug, enemies, rocks):
         if not self._wallpass:
-            self._wallpass = random.random() < 0.1
-        super().move(mapa, digdug, enemies, rocks)
+            self._wallpass = random.random() < WALLPASS_ODD[self._smart]
 
-        #TODO if wallpass then go to next tunnel
-
+        if self._wallpass:
+            open_pos = [
+                pos
+                for pos in [
+                    mapa.calc_pos(self.pos, d, self._wallpass) for d in Direction
+                ]
+                if pos not in [self.lastpos]
+                and pos not in [r.pos for r in rocks]  # don't bump into rocks
+            ]
+            if open_pos == []:
+                new_pos = self.lastpos
+            else:
+                next_pos = sorted(
+                    open_pos, key=lambda pos: math.dist(self.go_to_corridor, pos)
+                )
+                new_pos = next_pos[0]
+            self.lastpos = self.pos
+            self.pos = new_pos
+        else:
+            super().move(mapa, digdug, enemies, rocks)
         if self._wallpass and not mapa.is_blocked(self.pos, False):
             self._wallpass = False
+            self.go_to_corridor = random.choice(mapa.enemies_spawn)
+
 
 class Fygar(Enemy):
-    def __init__(self, pos):
+    def __init__(self, pos, smart=Smart.NORMAL):
         self.fire = []
-        super().__init__(pos, self.__class__.__name__, Speed.SLOW, Smart.LOW, False)
+        super().__init__(pos, self.__class__.__name__, Speed.SLOW, smart, False)
 
     def points(self, map_height):
         if self.lastdir in [Direction.EAST, Direction.WEST]:

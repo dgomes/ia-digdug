@@ -16,7 +16,7 @@ logger_websockets.setLevel(logging.WARN)
 logger = logging.getLogger("Map")
 logger.setLevel(logging.DEBUG)
 
-STAR = (3*16 , 7*16)
+STAR = (3 * 16, 7 * 16)
 
 DIGDUG = {
     "up": (2 * 16, 0),
@@ -275,10 +275,15 @@ class Enemy(Artifact):
             self.direction = "up"
 
         self.sprite = (
-                SPRITES,
-                (0, 0),
-                (*ENEMIES[self.name+"_Ghost" if traverse else self.name][self.direction], *scale((1, 1))),
-            )
+            SPRITES,
+            (0, 0),
+            (
+                *ENEMIES[self.name + "_Ghost" if traverse else self.name][
+                    self.direction
+                ],
+                *scale((1, 1)),
+            ),
+        )
         self.update_sprite(pos)
 
 
@@ -418,7 +423,7 @@ async def main_game():
 
         if "digdug" in state:
             main_group.update(state["digdug"])
-            
+
         if "rope" in state:
             if len(weapons_group) == 0:
                 weapons_group.add(Rope())
@@ -434,31 +439,36 @@ async def main_game():
                 enemies_alive.append(enemy["id"])
 
                 if enemy["id"] not in [e.sprite_id for e in enemies_group]:
-                    enemies_group.add(Enemy(name=enemy["name"], pos=enemy["pos"], sprite_id=enemy["id"]))
+                    enemies_group.add(
+                        Enemy(
+                            name=enemy["name"], pos=enemy["pos"], sprite_id=enemy["id"]
+                        )
+                    )
                 else:
                     enemies_group.update(
-                        sprite_id=enemy["id"], pos=enemy["pos"], traverse="traverse" in enemy
+                        sprite_id=enemy["id"],
+                        pos=enemy["pos"],
+                        traverse="traverse" in enemy,
                     )
 
                 if "fire" in enemy:
                     if enemy["id"] not in [w.sprite_id for w in weapons_group]:
-                        weapons_group.add(Fire(
-                            sprite_id=enemy["id"]
-                        ))
+                        weapons_group.add(Fire(sprite_id=enemy["id"]))
                     weapons_group.update(
                         sprite_id=enemy["id"], dir=enemy["dir"], pos=enemy["fire"]
                     )
                 elif enemy["id"] in [w.sprite_id for w in weapons_group]:
-                    weapons_group.remove([w for w in weapons_group if w.sprite_id == enemy["id"]][0])
-                    
-            for e in enemies_group: #remove dead enemies
+                    weapons_group.remove(
+                        [w for w in weapons_group if w.sprite_id == enemy["id"]][0]
+                    )
+
+            for e in enemies_group:  # remove dead enemies
                 if e.sprite_id not in enemies_alive:
                     enemies_group.remove(e)
 
         if "rocks" in state:
             for rock in state["rocks"]:
                 enemies_group.add(Rock(pos=rock["pos"], sprite_id=rock["id"]))
-
 
         main_group.draw(SCREEN)
         enemies_group.draw(SCREEN)
