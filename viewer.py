@@ -16,6 +16,8 @@ logger_websockets.setLevel(logging.WARN)
 logger = logging.getLogger("Map")
 logger.setLevel(logging.DEBUG)
 
+STAR = (3*16 , 7*16)
+
 DIGDUG = {
     "up": (2 * 16, 0),
     "left": (4 * 16, 0),
@@ -114,8 +116,11 @@ async def messages_handler(ws_path, queue):
 class Artifact(pygame.sprite.Sprite):
     def __init__(self, *args, **kw):
         self.x, self.y = None, None  # postpone to update_sprite()
+        if not hasattr(self, "sprite"):
+            self.sprite = (SPRITES, (0, 0), (*STAR, *scale((1, 1))))
         self.sprite_id = kw.pop("sprite_id", None)
         x, y = kw.pop("pos", ((kw.pop("x", 0), kw.pop("y", 0))))
+        self.direction = "left"
 
         new_pos = scale((x, y))
         self.image = pygame.Surface(CHAR_SIZE)
@@ -148,8 +153,6 @@ class Rock(Artifact):
 
 class Rope(Artifact):
     def __init__(self, *args, **kw):
-        self.direction = "left"
-        self.sprite = (SPRITES, (1, 1), (*ROPE_EDGE[0], *scale((1, 1))))
         super().__init__(*args, **kw)
 
     def update(self, *args, **kw):
@@ -197,8 +200,6 @@ class Rope(Artifact):
 
 class Fire(Artifact):
     def __init__(self, *args, **kw):
-        self.direction = kw.pop("dir")
-        self.sprite = (SPRITES, (1, 1), (*FYGAR_FIRE[self.direction], *scale((1, 1))))
         super().__init__(*args, **kw)
 
     def update(self, *args, **kw):
@@ -236,8 +237,6 @@ class Fire(Artifact):
 
 class DigDug(Artifact):
     def __init__(self, *args, **kw):
-        self.direction = "left"
-        self.sprite = (SPRITES, (0, 0), (*DIGDUG[self.direction], *scale((1, 1))))
         super().__init__(*args, **kw)
 
     def update(self, new_pos):
@@ -258,13 +257,7 @@ class DigDug(Artifact):
 
 class Enemy(Artifact):
     def __init__(self, *args, **kw):
-        self.direction = "left"
         self.name = kw.pop("name")
-        self.sprite = (
-            SPRITES,
-            (0, 0),
-            (*ENEMIES[self.name][self.direction], *scale((1, 1))),
-        )
         super().__init__(*args, **kw)
 
     def update(self, pos, sprite_id, traverse=False):
@@ -423,6 +416,18 @@ async def main_game():
                 color=(255, 0, 0),
             )
 
+        if "digdug" in state:
+            main_group.update(state["digdug"])
+            
+        if "rope" in state:
+            if len(weapons_group) == 0:
+                weapons_group.add(Rope())
+            weapons_group.update(
+                sprite_id="rope", dir=state["rope"]["dir"], pos=state["rope"]["pos"]
+            )
+        else:
+            weapons_group.empty()
+
         if "enemies" in state:
             enemies_alive = []
             for enemy in state["enemies"]:
@@ -438,12 +443,11 @@ async def main_game():
                 if "fire" in enemy:
                     if enemy["id"] not in [w.sprite_id for w in weapons_group]:
                         weapons_group.add(Fire(
-                            sprite_id=enemy["id"], dir=enemy["dir"]
+                            sprite_id=enemy["id"]
                         ))
-                    else:
-                        weapons_group.update(
-                            sprite_id=enemy["id"], dir=enemy["dir"], pos=enemy["fire"]
-                        )
+                    weapons_group.update(
+                        sprite_id=enemy["id"], dir=enemy["dir"], pos=enemy["fire"]
+                    )
                 elif enemy["id"] in [w.sprite_id for w in weapons_group]:
                     weapons_group.remove([w for w in weapons_group if w.sprite_id == enemy["id"]][0])
                     
@@ -455,18 +459,6 @@ async def main_game():
             for rock in state["rocks"]:
                 enemies_group.add(Rock(pos=rock["pos"], sprite_id=rock["id"]))
 
-        if "rope" in state:
-            if len(weapons_group) == 0:
-                weapons_group.add(Rope())
-            weapons_group.update(
-                sprite_id="rope", dir=state["rope"]["dir"], pos=state["rope"]["pos"]
-            )
-        else:
-            if "rope" in [w.sprite_id for w in weapons_group]:
-                weapons_group.remove([w for w in weapons_group if w.sprite_id == "rope"][0])
-
-        if "digdug" in state:
-            main_group.update(state["digdug"])
 
         main_group.draw(SCREEN)
         enemies_group.draw(SCREEN)
