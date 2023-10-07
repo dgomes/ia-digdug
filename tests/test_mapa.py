@@ -44,7 +44,7 @@ def test_map():
     assert game.map.calc_pos((4,4), Direction.WEST) == (3,4)
     assert game.map.calc_pos((4,4), Direction.EAST) == (5,4)
    
-    # test wall blocked / wallpass
+    # test blocked / diggable
     assert game.map.calc_pos((1,1), Direction.SOUTH, traverse=False) == (1,1)
     assert game.map.calc_pos((1,1), Direction.SOUTH, traverse=True) == (1,2)
 
