@@ -474,9 +474,6 @@ async def main_game():
         enemies_group.draw(SCREEN)
         weapons_group.draw(SCREEN)
 
-        # Highscores Board
-
-
         pygame.display.flip()
 
         try:
@@ -539,7 +536,6 @@ async def main_game():
                         (SCREEN.get_height() - HIGHSCORES.get_height()) / 2,
                     ),
                 )
-                print("highscores")
 
         except asyncio.queues.QueueEmpty:
             await asyncio.sleep(1.0 / GAME_SPEED)

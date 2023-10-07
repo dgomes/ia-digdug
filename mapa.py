@@ -13,7 +13,7 @@ class Map:
         self,
         level=1,
         enemies=0,
-        rocks=0,
+        rocks=[],
         size=(VITAL_SPACE + 10, VITAL_SPACE + 10),
         mapa=None,
         enemies_spawn=None,
@@ -26,7 +26,7 @@ class Map:
         self._size = size
         self.hor_tiles = size[0]
         self.ver_tiles = size[1]
-        self._rocks = []
+        self._rocks = rocks
         self._digged = []
         if enemies_spawn:
             self._enemies_spawn = enemies_spawn
@@ -70,16 +70,16 @@ class Map:
                     logger.debug(f"Spawn enemy at ({column}, {offset})")
 
             # create rocks
-            for r in range(self._level):
-                x, y = random.randrange(0, self.hor_tiles), random.randrange(
-                    VITAL_SPACE + 1, self.ver_tiles - VITAL_SPACE
-                )
-                while self.map[x][y] != Tiles.STONE:
+            if self._rocks == []:
+                for r in range(self._level):
                     x, y = random.randrange(0, self.hor_tiles), random.randrange(
                         VITAL_SPACE + 1, self.ver_tiles - VITAL_SPACE
                     )
-                self._rocks.append((x, y))
-
+                    while self.map[x][y] != Tiles.STONE:
+                        x, y = random.randrange(0, self.hor_tiles), random.randrange(
+                            VITAL_SPACE + 1, self.ver_tiles - VITAL_SPACE
+                        )
+                    self._rocks.append((x, y))
         else:
             logger.info("Loading MAP")
             self.map = mapa
