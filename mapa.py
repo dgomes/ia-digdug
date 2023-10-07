@@ -2,20 +2,10 @@ import logging
 import random
 from enum import IntEnum
 
-from consts import Direction
+from consts import Direction, Tiles, VITAL_SPACE, MIN_CORRIDOR_LEN
 
 logger = logging.getLogger("Map")
 logger.setLevel(logging.INFO)
-
-
-class Tiles(IntEnum):
-    PASSAGE = 0
-    STONE = 1
-    ROCK = 2
-
-
-VITAL_SPACE = 3
-MIN_CORRIDOR_LEN = 8
 
 
 class Map:

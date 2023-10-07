@@ -5,21 +5,14 @@ import random
 
 from characters import DigDug, Direction, Fygar, Pooka, Rock
 from mapa import VITAL_SPACE, Map
-from consts import Smart
+from consts import Smart, LIVES, TIMEOUT, MAX_LEN_ROPE, MIN_ENEMIES
 
 logger = logging.getLogger("Game")
 logger.setLevel(logging.INFO)
 
-LIVES = 3
 INITIAL_SCORE = 0
-TIMEOUT = 3000
 GAME_SPEED = 10
 MAP_SIZE = (48, 24)
-MAX_LEN_ROPE = 3
-MIN_ENEMIES = 3
-
-ROCK_KILL_POINTS = 1000
-
 
 def level_enemies(level):
     level += MIN_ENEMIES

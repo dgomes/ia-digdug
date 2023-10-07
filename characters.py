@@ -10,19 +10,17 @@ from consts import (
     GROUND_POINTS,
     MIDDLE_POINTS,
     ROCK_KILL_POINTS,
+    LIVES,
+    MIN_ENEMY_LIFE,
+    WALLPASS_ODD,
     Direction,
     Smart,
     Speed,
 )
 from mapa import VITAL_SPACE
 
-LOGGER = logging.getLogger("Map")
-
-WALLPASS_ODD = {Smart.LOW: 0.01, Smart.NORMAL: 0.2, Smart.HIGH: 0.5}
-
-DEFAULT_LIVES = 3
-MIN_ENEMY_LIFE = DEFAULT_LIVES
-
+logger = logging.getLogger("Characters")
+logger.setLevel(logging.INFO)
 
 class Character:
     def __init__(self, x=1, y=1):
@@ -89,7 +87,7 @@ class Rock(Character):
 
 
 class DigDug(Character):
-    def __init__(self, pos, lives=DEFAULT_LIVES):
+    def __init__(self, pos, lives=LIVES):
         super().__init__(*pos)
         self._lives: int = lives
 
@@ -127,6 +125,7 @@ class Enemy(Character):
         self.exit = False
         self._points = None
         super().__init__(*pos)
+        logger.info("Enemy %s created at %s with Smart.%s", self._name, self.pos,self._smart.name)
 
     @property
     def traverse(self):
@@ -224,7 +223,7 @@ class Enemy(Character):
 
         if math.dist(self.pos, (0, 0)) < 1:
             self.exit = True
-            LOGGER.debug("%s has EXITED thru %s", self.id, self.pos[1])
+            logger.debug("%s has EXITED through %s", self.id, self.pos[1])
 
     def ready(self):
         self.step += int(self._speed)

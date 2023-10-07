@@ -363,7 +363,6 @@ async def main_game():
 
     GAME_SPEED = newgame_json["fps"]
     mapa = Map(size=newgame_json["size"], mapa=newgame_json["map"])
-    TIMEOUT = newgame_json["timeout"]
     SCREEN = pygame.display.set_mode(scale(mapa.size))
     SPRITES = pygame.image.load("data/digdug.png").convert_alpha()
 
@@ -380,7 +379,8 @@ async def main_game():
                 BACKGROUND, (0, 0, 0), scale(state["digdug"]) + scale((1, 1))
             )
 
-        SCREEN.blit(BACKGROUND, (0, 0))
+        if "highscores" not in state:
+            SCREEN.blit(BACKGROUND, (0, 0))
 
         pygame.event.pump()
         if pygame.key.get_pressed()[pygame.K_ESCAPE]:
@@ -475,59 +475,7 @@ async def main_game():
         weapons_group.draw(SCREEN)
 
         # Highscores Board
-        if (
-            ("lives" in state and state["lives"] == 0)
-            or ("step" in state and state["step"] >= TIMEOUT)
-            or (
-                "digdug" in state
-                and "exit" in state
-                and state["digdug"] == state["exit"]
-                and "enemies" in state
-                and state["enemies"] == []
-            )
-        ) and "highscores" in newgame_json:
-            highscores = newgame_json["highscores"]
-            if (f"<{state['player']}>", state["score"]) not in highscores:
-                highscores.append((f"<{state['player']}>", state["score"]))
-            highscores = sorted(highscores, key=lambda s: s[1], reverse=True)[:-1]
-            highscores = highscores[: len(RANKS)]
 
-            HIGHSCORES = pygame.Surface(scale((20, 16)))
-            HIGHSCORES.fill(COLORS["grey"])
-
-            draw_info(HIGHSCORES, "THE 10 BEST PLAYERS", scale((5, 1)), COLORS["white"])
-            draw_info(HIGHSCORES, "RANK", scale((2, 3)), COLORS["orange"])
-            draw_info(HIGHSCORES, "SCORE", scale((6, 3)), COLORS["orange"])
-            draw_info(HIGHSCORES, "NAME", scale((11, 3)), COLORS["orange"])
-
-            for i, highscore in enumerate(highscores):
-                c = (i % 5) + 1
-                draw_info(
-                    HIGHSCORES,
-                    RANKS[i + 1],
-                    scale((2, i + 5)),
-                    list(COLORS.values())[c],
-                )
-                draw_info(
-                    HIGHSCORES,
-                    str(highscore[1]),
-                    scale((6, i + 5)),
-                    list(COLORS.values())[c],
-                )
-                draw_info(
-                    HIGHSCORES,
-                    highscore[0],
-                    scale((11, i + 5)),
-                    list(COLORS.values())[c],
-                )
-
-            SCREEN.blit(
-                HIGHSCORES,
-                (
-                    (SCREEN.get_width() - HIGHSCORES.get_width()) / 2,
-                    (SCREEN.get_height() - HIGHSCORES.get_height()) / 2,
-                ),
-            )
 
         pygame.display.flip()
 
@@ -547,6 +495,51 @@ async def main_game():
                 weapons_group.empty()
                 main_group.add(DigDug(pos=mapa.digdug_spawn))
                 mapa.level = state["level"]
+            
+            if "highscores" in state:
+                highscores = state["highscores"]
+                if (f"<{state['player']}>", state["score"]) not in highscores:
+                    highscores.append((f"<{state['player']}>", state["score"]))
+                highscores = sorted(highscores, key=lambda s: s[1], reverse=True)[:-1]
+                highscores = highscores[: len(RANKS)]
+
+                HIGHSCORES = pygame.Surface(scale((20, 16)))
+                HIGHSCORES.fill(COLORS["grey"])
+
+                draw_info(HIGHSCORES, "THE 10 BEST PLAYERS", scale((5, 1)), COLORS["white"])
+                draw_info(HIGHSCORES, "RANK", scale((2, 3)), COLORS["orange"])
+                draw_info(HIGHSCORES, "SCORE", scale((6, 3)), COLORS["orange"])
+                draw_info(HIGHSCORES, "NAME", scale((11, 3)), COLORS["orange"])
+
+                for i, highscore in enumerate(highscores):
+                    c = (i % 5) + 1
+                    draw_info(
+                        HIGHSCORES,
+                        RANKS[i + 1],
+                        scale((2, i + 5)),
+                        list(COLORS.values())[c],
+                    )
+                    draw_info(
+                        HIGHSCORES,
+                        str(highscore[1]),
+                        scale((6, i + 5)),
+                        list(COLORS.values())[c],
+                    )
+                    draw_info(
+                        HIGHSCORES,
+                        highscore[0],
+                        scale((11, i + 5)),
+                        list(COLORS.values())[c],
+                    )
+
+                SCREEN.blit(
+                    HIGHSCORES,
+                    (
+                        (SCREEN.get_width() - HIGHSCORES.get_width()) / 2,
+                        (SCREEN.get_height() - HIGHSCORES.get_height()) / 2,
+                    ),
+                )
+                print("highscores")
 
         except asyncio.queues.QueueEmpty:
             await asyncio.sleep(1.0 / GAME_SPEED)
