@@ -68,11 +68,11 @@ class Rope:
             self._pos.pop()
 
     def hit(self, enemies):
-        if self._pos == []: #can hit only if rope is out
+        if self._pos == []:  # can hit only if rope is out
             return False
-        
+
         for e in enemies:
-            if e.pos == self._pos[-1]:
+            if e.pos in self._pos:
                 e.kill()  # Hit enemy with rope until it dies
                 return True
         return False
@@ -201,6 +201,9 @@ class Game:
             if e.pos == self._digdug.pos:
                 self.kill_digdug()
                 e.respawn()
+            if e._name == "Fygar" and e.fire:
+                if self._digdug.pos in e.fire:
+                    self.kill_digdug()
         for r in self._rocks:
             if r.pos == self._digdug.pos:
                 self.kill_digdug()
@@ -251,11 +254,17 @@ class Game:
             "score": self._score,
             "lives": self._digdug.lives,
             "digdug": self._digdug.pos,
-            "enemies": [
-                {"name": str(e), "id": str(e.id), "pos": e.pos} for e in self._enemies
-            ],
+            "enemies": [],
             "rocks": [{"id": str(r.id), "pos": r.pos} for r in self._rocks],
         }
+
+        for e in self._enemies:
+            self._state["enemies"].append(
+                {"name": str(e), "id": str(e.id), "pos": e.pos, "dir": e.lastdir}
+            )
+            if e._name == "Fygar" and e.fire:
+                self._state["enemies"][-1]["fire"] = e.fire
+
         if self._rope._pos:
             self._state["rope"] = {"dir": self._rope._dir, "pos": self._rope._pos}
 

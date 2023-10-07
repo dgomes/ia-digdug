@@ -48,6 +48,11 @@ ROPE_EDGE = {  # index are Directions
     1: (3 * 16, 3 * 16),
 }
 
+FYGAR_FIRE = {
+    1: (0, 17 * 16),
+    3: (0, 18 * 16),
+}
+
 ENEMIES = {"Pooka": POOKA, "Fygar": FYGAR, "Rock": ROCK}
 
 STONE = (10 * 16, 0)
@@ -138,7 +143,12 @@ class Rope(Artifact):
         self.sprite = (SPRITES, (1, 1), (*ROPE_EDGE[0], *scale((1, 1))))
         super().__init__(*args, **kw)
 
-    def update(self, dir, pos):
+    def update(self, *args, **kw):
+        dir = kw.pop("dir")
+        pos = kw.pop("pos")
+        if kw.pop("sprite_id") != "rope":
+            return
+
         if dir in [1, 3]:  # East or West
             column = len(pos)
             line = 1
@@ -152,6 +162,7 @@ class Rope(Artifact):
                 line * CHAR_LENGTH,
             )
         )
+        self.image.set_colorkey((108, 7, 0))
 
         if dir in [0, 3]:
             self.rect = pygame.Rect(
@@ -172,6 +183,46 @@ class Rope(Artifact):
                 self.image.blit(
                     SPRITES, scale((0, p)), (*ROPE_EDGE[dir], *scale((1, 1)))
                 )
+        # TODO don't use edge all the time...
+
+
+class Fire(Artifact):
+    def __init__(self, *args, **kw):
+        self.direction = kw.pop("dir")
+        self.sprite = (SPRITES, (1, 1), (*FYGAR_FIRE[self.direction], *scale((1, 1))))
+        self.fygar_id = kw.pop("sprite_id")
+        super().__init__(*args, **kw)
+
+    def update(self, *args, **kw):
+        dir = kw.pop("dir")
+        pos = kw.pop("pos")
+
+        if kw.pop("sprite_id") != self.fygar_id:
+            return
+
+        column = len(pos)
+        line = 1
+
+        self.image = pygame.Surface(
+            (
+                column * CHAR_LENGTH,
+                line * CHAR_LENGTH,
+            )
+        )
+
+        if dir in [0, 3]:
+            self.rect = pygame.Rect(
+                scale(pos[-1]) + (column * CHAR_LENGTH, line * CHAR_LENGTH)
+            )
+        else:
+            self.rect = pygame.Rect(
+                scale(pos[0]) + (column * CHAR_LENGTH, line * CHAR_LENGTH)
+            )
+
+        self.image.fill((0, 0, 230))
+
+        for p in range(len(pos)):
+            self.image.blit(SPRITES, scale((p, 0)), (*FYGAR_FIRE[dir], *scale((1, 1))))
         # TODO don't use edge all the time...
 
 
@@ -294,7 +345,7 @@ async def main_game():
     global SPRITES, SCREEN
 
     main_group = pygame.sprite.LayeredUpdates()
-    rope_group = pygame.sprite.OrderedUpdates()
+    weapons_group = pygame.sprite.OrderedUpdates()
     enemies_group = pygame.sprite.OrderedUpdates()
 
     logging.info("Waiting for map information from server")
@@ -311,7 +362,8 @@ async def main_game():
     BACKGROUND = draw_background(mapa)
     SCREEN.blit(BACKGROUND, (0, 0))
     main_group.add(DigDug(pos=mapa.digdug_spawn))
-    rope_group.add(Rope())
+
+    weapons_sprites = {}
 
     state = {"score": 0, "player": "player1", "digdug": (1, 1)}
 
@@ -329,7 +381,7 @@ async def main_game():
             asyncio.get_event_loop().stop()
 
         main_group.clear(SCREEN, clear_callback)
-        rope_group.clear(SCREEN, clear_callback)
+        weapons_group.clear(SCREEN, clear_callback)
         enemies_group.clear(SCREEN, clear_callback)
 
         if "score" in state and "player" in state:
@@ -367,24 +419,41 @@ async def main_game():
             enemies_group.empty()
             for enemy in state["enemies"]:
                 enemies_group.add(Enemy(name=enemy["name"], pos=enemy["pos"]))
+                if "fire" in enemy:
+                    if len(weapons_group) == 0:
+                        weapons_sprites[enemy["id"]] = Fire(
+                            sprite_id=enemy["id"], dir=enemy["dir"]
+                        )
+                        weapons_group.add(weapons_sprites[enemy["id"]])
+                    weapons_group.update(
+                        sprite_id=enemy["id"], dir=enemy["dir"], pos=enemy["fire"]
+                    )
+                elif enemy["id"] in weapons_sprites:
+                    weapons_group.remove(weapons_sprites[enemy["id"]])
+                    del weapons_sprites[enemy["id"]]
 
         if "rocks" in state:
             for rock in state["rocks"]:
                 enemies_group.add(Rock(pos=rock["pos"]))
 
         if "rope" in state:
-            if len(rope_group) == 0:
-                rope_group.add(Rope())
-            rope_group.update(dir=state["rope"]["dir"], pos=state["rope"]["pos"])
+            if len(weapons_group) == 0:
+                weapons_sprites["rope"] = Rope()
+                weapons_group.add(weapons_sprites["rope"])
+            weapons_group.update(
+                sprite_id="rope", dir=state["rope"]["dir"], pos=state["rope"]["pos"]
+            )
         else:
-            rope_group.empty()
+            if "rope" in weapons_sprites:
+                weapons_group.remove(weapons_sprites["rope"])
+                del weapons_sprites["rope"]
 
         if "digdug" in state:
             main_group.update(state["digdug"])
 
         main_group.draw(SCREEN)
         enemies_group.draw(SCREEN)
-        rope_group.draw(SCREEN)
+        weapons_group.draw(SCREEN)
 
         # Highscores Board
         if (
@@ -447,7 +516,6 @@ async def main_game():
             state = json.loads(q.get_nowait())
 
             if "size" in state and "map" in state:
-                print(state)
                 # New level! lets clean everything up!
                 logger.info("New level! %s", state["level"])
                 mapa = Map(size=state["size"], mapa=state["map"])
@@ -457,7 +525,7 @@ async def main_game():
 
                 main_group.empty()
                 enemies_group.empty()
-                rope_group.empty()
+                weapons_group.empty()
                 main_group.add(DigDug(pos=mapa.digdug_spawn))
                 mapa.level = state["level"]
 

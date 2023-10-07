@@ -6,7 +6,7 @@ import uuid
 from consts import (
     BED_POINTS,
     BOTTOM_POINTS,
-    ENEMY_HEAL,
+    ENEMY_HEAL_ODD,
     GROUND_POINTS,
     MIDDLE_POINTS,
     ROCK_KILL_POINTS,
@@ -122,7 +122,7 @@ class Enemy(Character):
         self.step = 0
         self.lastdir = Direction.EAST
         self.lastpos = None
-        self.wander = 0
+        self.freeze = False
         self._alive = lives  # TODO increase according to level
         self.exit = False
         self._points = None
@@ -151,6 +151,7 @@ class Enemy(Character):
             self._alive = 0
 
         self._alive -= 1
+        self.freeze = True
         if self._alive < 0:
             self._alive = 0
             return True
@@ -165,9 +166,14 @@ class Enemy(Character):
             return
 
         if self._alive < MIN_ENEMY_LIFE:
-            self._alive += random.choice(
-                ENEMY_HEAL * [0] + [1]
+            self._alive += int(
+                random.random() < ENEMY_HEAL_ODD
             )  # Give it a chance to come back to life
+            return
+
+        if self.freeze:
+            self.freeze = False
+            self.fire = []
             return
 
         if self._smart == Smart.LOW:
@@ -209,9 +215,9 @@ class Enemy(Character):
         self.lastpos = self.pos
         self.pos = new_pos
 
-        if math.dist(self.pos, (0, 0)) < VITAL_SPACE:
+        if math.dist(self.pos, (0, 0)) < 1:
             self.exit = True
-            LOGGER.debug("%s has EXITED", self.id, self.pos[1])
+            LOGGER.debug("%s has EXITED thru %s", self.id, self.pos[1])
 
     def ready(self):
         self.step += int(self._speed)
@@ -228,6 +234,7 @@ class Pooka(Enemy):
 
 class Fygar(Enemy):
     def __init__(self, pos):
+        self.fire = []
         super().__init__(pos, self.__class__.__name__, Speed.SLOW, Smart.LOW, False)
 
     def points(self, map_height):
@@ -235,3 +242,21 @@ class Fygar(Enemy):
             return super().points(map_height) * 2
 
         return super().points(map_height)
+
+    def move(self, mapa, digdug, enemies, rocks):
+        super().move(mapa, digdug, enemies, rocks)
+
+        fire_odd = 0.5 if digdug.pos[1] == self.pos[1] else 0.1
+        if (
+            not self.freeze
+            and self.lastdir in [Direction.EAST, Direction.WEST]
+            and random.random() < fire_odd
+        ):
+            pos = self.pos
+            for _ in range(3):
+                pos = mapa.calc_pos(pos, self.dir[self.lastdir], traverse=False)
+                if pos not in self.fire:
+                    self.fire.append(pos)
+                else:
+                    break
+            self.freeze = True
