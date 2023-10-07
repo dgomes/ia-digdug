@@ -264,6 +264,8 @@ class Game:
             )
             if e._name == "Fygar" and e.fire:
                 self._state["enemies"][-1]["fire"] = e.fire
+            if e.traverse:
+                self._state["enemies"][-1]["traverse"] = e.traverse
 
         if self._rope._pos:
             self._state["rope"] = {"dir": self._rope._dir, "pos": self._rope._pos}

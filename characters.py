@@ -128,6 +128,10 @@ class Enemy(Character):
         self._points = None
         super().__init__(*pos)
 
+    @property
+    def traverse(self):
+        return self._wallpass
+
     def __str__(self):
         return f"{self._name}"
 
@@ -230,7 +234,12 @@ class Enemy(Character):
 class Pooka(Enemy):
     def __init__(self, pos):
         super().__init__(pos, self.__class__.__name__, Speed.FAST, Smart.LOW, False)
-
+    def move(self, mapa, digdug, enemies, rocks):
+        if not self._wallpass:
+            self._wallpass = random.random() < 0.1
+        super().move(mapa, digdug, enemies, rocks)
+        if self._wallpass and not mapa.is_blocked(self.pos, False):
+            self._wallpass = False
 
 class Fygar(Enemy):
     def __init__(self, pos):

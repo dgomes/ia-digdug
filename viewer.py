@@ -28,6 +28,14 @@ POOKA = {
     "down": (0, 10 * 16),
     "right": (0, 9 * 16),
 }
+
+POOKA_GHOST = {
+    "up": (3 * 16, 9 * 16),
+    "left": (3 * 16, 9 * 16),
+    "down": (3 * 16, 9 * 16),
+    "right": (3 * 16, 9 * 16),
+}
+
 FYGAR = {
     "up": (0, 15 * 16),
     "left": (0, 16 * 16),
@@ -53,7 +61,7 @@ FYGAR_FIRE = {
     3: (0, 18 * 16),
 }
 
-ENEMIES = {"Pooka": POOKA, "Fygar": FYGAR, "Rock": ROCK}
+ENEMIES = {"Pooka": POOKA, "Fygar": FYGAR, "Rock": ROCK, "Pooka_Ghost": POOKA_GHOST}
 
 STONE = (10 * 16, 0)
 FALLOUT = {"c": (32, 96)}
@@ -106,7 +114,7 @@ async def messages_handler(ws_path, queue):
 class Artifact(pygame.sprite.Sprite):
     def __init__(self, *args, **kw):
         self.x, self.y = None, None  # postpone to update_sprite()
-
+        self.sprite_id = kw.pop("sprite_id", None)
         x, y = kw.pop("pos", ((kw.pop("x", 0), kw.pop("y", 0))))
 
         new_pos = scale((x, y))
@@ -127,13 +135,14 @@ class Artifact(pygame.sprite.Sprite):
         self.image.set_colorkey((108, 7, 0))
         self.x, self.y = pos
 
-    def update(self, *args):
+    def update(self, *args, **kw):
         self.update_sprite()
 
 
 class Rock(Artifact):
     def __init__(self, *args, **kw):
         self.sprite = (SPRITES, (0, 0), (*ROCK[0], *scale((1, 1))))
+        self.name = "rock"
         super().__init__(*args, **kw)
 
 
@@ -190,14 +199,13 @@ class Fire(Artifact):
     def __init__(self, *args, **kw):
         self.direction = kw.pop("dir")
         self.sprite = (SPRITES, (1, 1), (*FYGAR_FIRE[self.direction], *scale((1, 1))))
-        self.fygar_id = kw.pop("sprite_id")
         super().__init__(*args, **kw)
 
     def update(self, *args, **kw):
         dir = kw.pop("dir")
         pos = kw.pop("pos")
 
-        if kw.pop("sprite_id") != self.fygar_id:
+        if kw.pop("sprite_id") != self.sprite_id:
             return
 
         column = len(pos)
@@ -259,8 +267,10 @@ class Enemy(Artifact):
         )
         super().__init__(*args, **kw)
 
-    def update(self, new_pos):
-        x, y = scale(new_pos)
+    def update(self, pos, sprite_id, traverse=False):
+        if sprite_id != self.sprite_id:
+            return
+        x, y = scale(pos)
 
         if x > self.x:
             self.direction = "right"
@@ -272,11 +282,11 @@ class Enemy(Artifact):
             self.direction = "up"
 
         self.sprite = (
-            SPRITES,
-            (0, 0),
-            (*ENEMIES[self.name][self.direction], *scale((1, 1))),
-        )
-        self.update_sprite(new_pos)
+                SPRITES,
+                (0, 0),
+                (*ENEMIES[self.name+"_Ghost" if traverse else self.name][self.direction], *scale((1, 1))),
+            )
+        self.update_sprite(pos)
 
 
 def clear_callback(surf, rect):
@@ -416,9 +426,17 @@ async def main_game():
             )
 
         if "enemies" in state:
-            enemies_group.empty()
+            enemies_alive = []
             for enemy in state["enemies"]:
-                enemies_group.add(Enemy(name=enemy["name"], pos=enemy["pos"]))
+                enemies_alive.append(enemy["id"])
+
+                if enemy["id"] not in [e.sprite_id for e in enemies_group]:
+                    enemies_group.add(Enemy(name=enemy["name"], pos=enemy["pos"], sprite_id=enemy["id"]))
+                else:
+                    enemies_group.update(
+                        sprite_id=enemy["id"], pos=enemy["pos"], traverse="traverse" in enemy
+                    )
+
                 if "fire" in enemy:
                     if len(weapons_group) == 0:
                         weapons_sprites[enemy["id"]] = Fire(
@@ -431,10 +449,14 @@ async def main_game():
                 elif enemy["id"] in weapons_sprites:
                     weapons_group.remove(weapons_sprites[enemy["id"]])
                     del weapons_sprites[enemy["id"]]
+                    
+            for e in enemies_group: #remove dead enemies
+                if e.sprite_id not in enemies_alive:
+                    enemies_group.remove(e)
 
         if "rocks" in state:
             for rock in state["rocks"]:
-                enemies_group.add(Rock(pos=rock["pos"]))
+                enemies_group.add(Rock(pos=rock["pos"], sprite_id=rock["id"]))
 
         if "rope" in state:
             if len(weapons_group) == 0:
