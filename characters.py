@@ -238,6 +238,9 @@ class Pooka(Enemy):
         if not self._wallpass:
             self._wallpass = random.random() < 0.1
         super().move(mapa, digdug, enemies, rocks)
+
+        #TODO if wallpass then go to next tunnel
+
         if self._wallpass and not mapa.is_blocked(self.pos, False):
             self._wallpass = False
 

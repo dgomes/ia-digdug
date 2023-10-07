@@ -373,8 +373,6 @@ async def main_game():
     SCREEN.blit(BACKGROUND, (0, 0))
     main_group.add(DigDug(pos=mapa.digdug_spawn))
 
-    weapons_sprites = {}
-
     state = {"score": 0, "player": "player1", "digdug": (1, 1)}
 
     while True:
@@ -438,17 +436,16 @@ async def main_game():
                     )
 
                 if "fire" in enemy:
-                    if len(weapons_group) == 0:
-                        weapons_sprites[enemy["id"]] = Fire(
+                    if enemy["id"] not in [w.sprite_id for w in weapons_group]:
+                        weapons_group.add(Fire(
                             sprite_id=enemy["id"], dir=enemy["dir"]
+                        ))
+                    else:
+                        weapons_group.update(
+                            sprite_id=enemy["id"], dir=enemy["dir"], pos=enemy["fire"]
                         )
-                        weapons_group.add(weapons_sprites[enemy["id"]])
-                    weapons_group.update(
-                        sprite_id=enemy["id"], dir=enemy["dir"], pos=enemy["fire"]
-                    )
-                elif enemy["id"] in weapons_sprites:
-                    weapons_group.remove(weapons_sprites[enemy["id"]])
-                    del weapons_sprites[enemy["id"]]
+                elif enemy["id"] in [w.sprite_id for w in weapons_group]:
+                    weapons_group.remove([w for w in weapons_group if w.sprite_id == enemy["id"]][0])
                     
             for e in enemies_group: #remove dead enemies
                 if e.sprite_id not in enemies_alive:
@@ -460,15 +457,13 @@ async def main_game():
 
         if "rope" in state:
             if len(weapons_group) == 0:
-                weapons_sprites["rope"] = Rope()
-                weapons_group.add(weapons_sprites["rope"])
+                weapons_group.add(Rope())
             weapons_group.update(
                 sprite_id="rope", dir=state["rope"]["dir"], pos=state["rope"]["pos"]
             )
         else:
-            if "rope" in weapons_sprites:
-                weapons_group.remove(weapons_sprites["rope"])
-                del weapons_sprites["rope"]
+            if "rope" in [w.sprite_id for w in weapons_group]:
+                weapons_group.remove([w for w in weapons_group if w.sprite_id == "rope"][0])
 
         if "digdug" in state:
             main_group.update(state["digdug"])
