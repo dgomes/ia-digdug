@@ -22,6 +22,7 @@ from mapa import VITAL_SPACE
 logger = logging.getLogger("Characters")
 logger.setLevel(logging.INFO)
 
+
 class Character:
     def __init__(self, x=1, y=1):
         self._pos = x, y
@@ -125,7 +126,7 @@ class Enemy(Character):
         self.exit = False
         self._points = None
         super().__init__(*pos)
-        logger.info("Enemy %s created at %s with Smart.%s", self._name, self.pos,self._smart.name)
+        logger.info("Enemy %s created at %s with Smart.%s", self._name, self.pos, self._smart.name)
 
     @property
     def traverse(self):
@@ -290,7 +291,7 @@ class Fygar(Enemy):
             pos = self.pos
             for _ in range(3):
                 pos = mapa.calc_pos(pos, self.dir[self.lastdir], traverse=False)
-                if pos not in self.fire:
+                if pos not in self.fire and not pos == self.pos:  # Make sure we don't fire on ourselves
                     self.fire.append(pos)
                 else:
                     break
