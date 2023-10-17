@@ -117,10 +117,10 @@ class Game:
         self._player_name = player_name
         self._running = True
         self._total_steps = 0
-        self._score = INITIAL_SCORE
         self._digdug = DigDug(self.map.digdug_spawn, self._initial_lives)
 
         self.next_level(self.initial_level)
+        self._score = INITIAL_SCORE  # scores start from 0
 
     def stop(self):
         logger.info("GAME OVER")
@@ -135,6 +135,7 @@ class Game:
         self._step = 0
         self._lastkeypress = ""
         self._score = self.score
+        self._rope = Rope(self.map)
         self._enemies = [
             enemy(
                 pos,
