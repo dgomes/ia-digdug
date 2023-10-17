@@ -244,12 +244,15 @@ class DigDug(Artifact):
 
         if x > self.x:
             self.direction = "right"
-        if x < self.x:
+        elif x < self.x:
             self.direction = "left"
         if y > self.y:
             self.direction = "down"
-        if y < self.y:
+        elif y < self.y:
             self.direction = "up"
+
+        if x == 16 and y == 16:  # Make sure DigDug looks to the left when respawning
+            self.direction = "left"
 
         self.sprite = (SPRITES, (0, 0), (*DIGDUG[self.direction], *scale((1, 1))))
         self.update_sprite(tuple(new_pos))
@@ -492,7 +495,7 @@ async def main_game():
                 weapons_group.empty()
                 main_group.add(DigDug(pos=mapa.digdug_spawn))
                 mapa.level = state["level"]
-            
+
             if "highscores" in state:
                 highscores = state["highscores"]
                 if (f"<{state['player']}>", state["score"]) not in highscores:

@@ -99,6 +99,11 @@ class DigDug(Character):
     def lives(self):
         return self._lives
 
+    def respawn(self):
+        self._direction = Direction.EAST
+        logger.info(self._direction)
+        return super().respawn()
+
     def kill(self):
         self._lives -= 1
 

@@ -24,7 +24,7 @@ wslogger = logging.getLogger("websockets")
 wslogger.setLevel(logging.WARN)
 
 logger = logging.getLogger("Server")
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 Player = namedtuple("Player", ["name", "ws"])
 
@@ -87,7 +87,7 @@ class GameServer:
         if self.current_player:
             await self.current_player.ws.send(json.dumps(game_info))
 
-    async def incomming_handler(self, websocket: WebSocketCommonProtocol, path: str):
+    async def incoming_handler(self, websocket: WebSocketCommonProtocol, path: str):
         """Process new clients arriving at the server."""
         try:
             async for message in websocket:
@@ -207,7 +207,7 @@ if __name__ == "__main__":
         game_loop_task = asyncio.ensure_future(g.mainloop())
 
         logger.info("Listenning @ %s:%s", args.bind, args.port)
-        websocket_server = websockets.serve(g.incomming_handler, args.bind, args.port)
+        websocket_server = websockets.serve(g.incoming_handler, args.bind, args.port)
 
         await asyncio.gather(websocket_server, game_loop_task)
 

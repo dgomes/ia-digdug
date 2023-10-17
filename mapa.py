@@ -5,7 +5,7 @@ from enum import IntEnum
 from consts import Direction, Tiles, VITAL_SPACE, MIN_CORRIDOR_LEN
 
 logger = logging.getLogger("Map")
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 
 class Map:
@@ -35,7 +35,7 @@ class Map:
 
         if not mapa:
             logger.info("Generating a MAP")
-            self.map = [[Tiles.STONE] * self.ver_tiles for i in range(self.hor_tiles)]
+            self.map = [[Tiles.STONE] * self.ver_tiles for _ in range(self.hor_tiles)]
             for x in range(self.hor_tiles):
                 for y in range(self.ver_tiles):
                     if y in range(0, 2):
@@ -51,7 +51,7 @@ class Map:
                             self.map[x][y] = Tiles.STONE
 
             # create caves for enemies
-            for e in range(self._level + 2):
+            for _ in range(self._level + 2):
                 if random.choice([True, False]):
                     # horizontal
                     line = random.randrange(VITAL_SPACE + 1, self.ver_tiles)
@@ -63,15 +63,16 @@ class Map:
                 else:
                     # vertical
                     column = random.randrange(0, self.hor_tiles)
-                    offset = random.randrange(3, self.ver_tiles - MIN_CORRIDOR_LEN)
+                    offset = random.randrange(3, self.ver_tiles - MIN_CORRIDOR_LEN - 3)
+                    logger.info(self.ver_tiles)
                     for y in range(MIN_CORRIDOR_LEN):
                         self.map[column][offset + y] = Tiles.PASSAGE
                     self._enemies_spawn.append((column, offset))
-                    logger.debug(f"Spawn enemy at ({column}, {offset})")
+                    logger.debug(f"Spawn enemy at ({column}, {offset}), vertical")
 
             # create rocks
             if self._rocks == []:
-                for r in range(self._level):
+                for _ in range(self._level):
                     x, y = random.randrange(0, self.hor_tiles), random.randrange(
                         VITAL_SPACE + 1, self.ver_tiles - VITAL_SPACE
                     )

@@ -14,6 +14,7 @@ INITIAL_SCORE = 0
 GAME_SPEED = 10
 MAP_SIZE = (48, 24)
 
+
 def level_enemies(level):
     level += MIN_ENEMIES
     fygars = random.randrange(1, level // 2)
@@ -66,9 +67,9 @@ class Rope:
 
         for e in enemies:
             if e.pos in self._pos:
-                e.kill() # kill enemy
+                e.kill()  # kill enemy
 
-                #remove rope after hit
+                # remove rope after hit
                 rope_index = self._pos.index(e.pos)
                 self._pos = self._pos[:rope_index + 1]
 
@@ -190,6 +191,7 @@ class Game:
         logger.info(f"Dig Dug has died on step: {self._step}")
         self._digdug.kill()
         logger.debug(f"Dig Dug has now {self._digdug.lives} lives")
+        self._digdug._direction = Direction.EAST
         if self._digdug.lives > 0:
             logger.debug("RESPAWN")
             self._digdug.respawn()
