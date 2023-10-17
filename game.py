@@ -140,6 +140,7 @@ class Game:
                 smart=random.choices(
                     list(Smart), [1, level // 10, level // 20], k=1
                 )[0],
+                level=level
             )
             for enemy, pos in zip(level_enemies(level), self.map.enemies_spawn)
         ]
@@ -191,7 +192,6 @@ class Game:
         logger.info(f"Dig Dug has died on step: {self._step}")
         self._digdug.kill()
         logger.debug(f"Dig Dug has now {self._digdug.lives} lives")
-        self._digdug._direction = Direction.EAST
         if self._digdug.lives > 0:
             logger.debug("RESPAWN")
             self._digdug.respawn()

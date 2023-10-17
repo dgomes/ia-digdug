@@ -101,7 +101,6 @@ class DigDug(Character):
 
     def respawn(self):
         self._direction = Direction.EAST
-        logger.info(self._direction)
         return super().respawn()
 
     def kill(self):
@@ -116,7 +115,7 @@ class DigDug(Character):
 
 
 class Enemy(Character):
-    def __init__(self, pos, name, speed, smart, wallpass, lives=MIN_ENEMY_LIFE):
+    def __init__(self, pos, name, speed, smart, wallpass, level, lives=MIN_ENEMY_LIFE):
         self._name = name
         self.id = uuid.uuid4()
         self._speed = speed
@@ -127,7 +126,7 @@ class Enemy(Character):
         self.lastdir = Direction.EAST
         self.lastpos = None
         self.freeze = False
-        self._alive = lives  # TODO increase according to level
+        self._alive = lives + level // 10
         self.exit = False
         self._points = None
         super().__init__(*pos)
@@ -240,8 +239,8 @@ class Enemy(Character):
 
 
 class Pooka(Enemy):
-    def __init__(self, pos, smart=Smart.NORMAL):
-        super().__init__(pos, self.__class__.__name__, Speed.FAST, smart, False)
+    def __init__(self, pos, level, smart=Smart.NORMAL):
+        super().__init__(pos, self.__class__.__name__, Speed.FAST, smart, False, level)
         self.go_to_corridor = pos
 
     def move(self, mapa, digdug, enemies, rocks):
@@ -274,9 +273,9 @@ class Pooka(Enemy):
 
 
 class Fygar(Enemy):
-    def __init__(self, pos, smart=Smart.NORMAL):
+    def __init__(self, pos, level, smart=Smart.NORMAL):
         self.fire = []
-        super().__init__(pos, self.__class__.__name__, Speed.SLOW, smart, False)
+        super().__init__(pos, self.__class__.__name__, Speed.SLOW, smart, False, level)
 
     def points(self, map_height):
         if self.lastdir in [Direction.EAST, Direction.WEST]:
