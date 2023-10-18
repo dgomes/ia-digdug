@@ -118,6 +118,7 @@ class Game:
         self._total_steps = 0
         self._score = INITIAL_SCORE
         self._digdug = DigDug(self.map.digdug_spawn, self._initial_lives)
+        self._prev_digdug_pos = self._digdug.pos
 
         self.next_level(self.initial_level)
 
@@ -168,6 +169,7 @@ class Game:
                     self._rope = Rope(self.map)
 
                 # Update position
+                self._prev_digdug_pos = self._digdug.pos
                 self._digdug.move(
                     self.map,
                     key2direction(self._lastkeypress),
@@ -208,6 +210,9 @@ class Game:
             if e._name == "Fygar" and e.fire:
                 if self._digdug.pos in e.fire:
                     self.kill_digdug()
+            if e.lastpos == self._digdug.pos and e.pos == self._prev_digdug_pos:
+                self.kill_digdug()
+                e.respawn()
         for r in self._rocks:
             if r.pos == self._digdug.pos:
                 self.kill_digdug()
