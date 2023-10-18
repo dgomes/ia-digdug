@@ -133,6 +133,7 @@ class Game:
         self._total_steps += self._step
         self._step = 0
         self._lastkeypress = ""
+        self._score = self.score
         self._enemies = [
             enemy(
                 pos,
