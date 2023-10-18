@@ -290,7 +290,7 @@ class Fygar(Enemy):
             pos = self.pos
             for _ in range(3):
                 pos = mapa.calc_pos(pos, self.dir[self.lastdir], traverse=False)
-                if pos not in self.fire:
+                if pos not in self.fire and not pos == self.pos:  # Make sure we don't fire on ourselves:
                     self.fire.append(pos)
                 else:
                     break
