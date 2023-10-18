@@ -132,6 +132,7 @@ class Game:
         self._digdug.respawn()
         self._total_steps += self._step
         self._step = 0
+        self._rope = Rope(self.map)
         self._lastkeypress = ""
         self._enemies = [
             enemy(
@@ -139,6 +140,7 @@ class Game:
                 smart=random.choices(
                     list(Smart), [1, level // 10, level // 20], k=1
                 )[0],
+                level=level,
             )
             for enemy, pos in zip(level_enemies(level), self.map.enemies_spawn)
         ]
