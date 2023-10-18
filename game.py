@@ -132,6 +132,7 @@ class Game:
         self._digdug.respawn()
         self._total_steps += self._step
         self._step = 0
+        self._rope = Rope(self.map)
         self._lastkeypress = ""
         self._enemies = [
             enemy(
