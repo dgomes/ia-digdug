@@ -121,6 +121,8 @@ class Game:
 
         self.next_level(self.initial_level)
 
+        self._score = INITIAL_SCORE
+
     def stop(self):
         logger.info("GAME OVER")
         self._total_steps += self._step
