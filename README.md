@@ -26,6 +26,7 @@ to play using the sample client make sure the client pygame hidden window has fo
 Directions: arrows
 
 *A*: 'a' - pump enemies
+*F1*: 'f1' - loop game
 
 ## Debug Installation
 

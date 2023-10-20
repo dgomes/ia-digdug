@@ -154,7 +154,7 @@ class Game:
 
     def update_digdug(self):
         try:
-            assert self._lastkeypress in "wasdAB" or self._lastkeypress == ""
+            assert self._lastkeypress in "wasdABr" or self._lastkeypress == ""
 
             if self._lastkeypress.isupper():
                 # Parse action
@@ -162,6 +162,8 @@ class Game:
                     self._rope.shoot(self._digdug.pos, self._digdug.direction)
                     if self._rope.hit(self._enemies):
                         logger.debug("Enemy hit with rope")
+            elif self._lastkeypress in "r" and self._lastkeypress != "":
+                self.reset()
             else:
                 # if digdug moves we let go of the rope
                 if self._lastkeypress in "wasd" and self._lastkeypress != "":
@@ -198,6 +200,8 @@ class Game:
                     logger.debug("respawn camper")
                     e.respawn()
         else:
+            if hasattr(Game, 'loop'):
+                self.writefile()
             self.stop()
 
     def collision(self):
@@ -286,3 +290,19 @@ class Game:
             "score": self.score,
             "level": self.map.level,
         }
+    
+    @classmethod
+    def reset(cls):
+        cls.count = 1
+        cls.loop = True
+
+    def writefile(self):
+        filename = "scores.txt"
+        with open(filename, 'a') as file:
+            file.write("Game " + str(Game.count) + ": " + str(self.score) + " - Died in level: " + str(self.map.level) + "\n")
+        file.close()
+        self.update_count()
+
+    @classmethod
+    def update_count(cls):
+        cls.count += 1

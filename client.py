@@ -23,6 +23,7 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
         SCREEN = pygame.display.set_mode((299, 123))
         SPRITES = pygame.image.load("data/pad.png").convert_alpha()
         SCREEN.blit(SPRITES, (0, 0))
+        restart = False
 
         while True:
             try:
@@ -51,7 +52,9 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
                             key = "A"
                         elif event.key == pygame.K_b:
                             key = "B"
-
+                        elif event.key == pygame.K_F1:
+                            key = "r"
+                            restart = True
                         elif event.key == pygame.K_d:
                             import pprint
 
@@ -62,12 +65,17 @@ async def agent_loop(server_address="localhost:8000", agent_name="student"):
                         )  # send key command to server - you must implement this send in the AI agent
                         break
             except websockets.exceptions.ConnectionClosedOK:
+                await asyncio.sleep(3)
                 print("Server has cleanly disconnected us")
-                return
+                return restart
 
             # Next line is not needed for AI agent
             pygame.display.flip()
 
+async def main():
+    restart = await agent_loop(f"{SERVER}:{PORT}", NAME)
+    while restart:
+        await agent_loop(f"{SERVER}:{PORT}", NAME)
 
 # DO NOT CHANGE THE LINES BELLOW
 # You can change the default values using the command line, example:
@@ -76,4 +84,4 @@ loop = asyncio.get_event_loop()
 SERVER = os.environ.get("SERVER", "localhost")
 PORT = os.environ.get("PORT", "8000")
 NAME = os.environ.get("NAME", getpass.getuser())
-loop.run_until_complete(agent_loop(f"{SERVER}:{PORT}", NAME))
+loop.run_until_complete(main())
