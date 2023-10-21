@@ -63,7 +63,7 @@ class Map:
                 else:
                     # vertical
                     column = random.randrange(0, self.hor_tiles)
-                    offset = random.randrange(0, self.ver_tiles - MIN_CORRIDOR_LEN)
+                    offset = random.randrange(3, self.ver_tiles - MIN_CORRIDOR_LEN)
                     for y in range(MIN_CORRIDOR_LEN):
                         self.map[column][offset + y] = Tiles.PASSAGE
                     self._enemies_spawn.append((column, offset))
