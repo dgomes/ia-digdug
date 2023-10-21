@@ -185,10 +185,8 @@ class Game:
 
         if len(self._enemies) == 0:
             logger.info(f"Level {self.map.level} completed")
-            logger.info(self._score)
             self._score += (self.map.level * TIMEOUT - self._total_steps) // 10 + \
                 self._digdug.lives * 1000  # update score before new level
-            logger.info(self._score)
             self.next_level(self.map.level + 1)
 
     def kill_digdug(self):
