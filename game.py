@@ -14,6 +14,7 @@ INITIAL_SCORE = 0
 GAME_SPEED = 10
 MAP_SIZE = (48, 24)
 
+
 def level_enemies(level):
     level += MIN_ENEMIES
     fygars = random.randrange(1, level // 2)
@@ -66,9 +67,9 @@ class Rope:
 
         for e in enemies:
             if e.pos in self._pos:
-                e.kill() # kill enemy
+                e.kill()  # kill enemy
 
-                #remove rope after hit
+                # remove rope after hit
                 rope_index = self._pos.index(e.pos)
                 self._pos = self._pos[:rope_index + 1]
 
@@ -121,8 +122,6 @@ class Game:
 
         self.next_level(self.initial_level)
 
-        self._score = INITIAL_SCORE
-
     def stop(self):
         logger.info("GAME OVER")
         self._total_steps += self._step
@@ -135,7 +134,6 @@ class Game:
         self._total_steps += self._step
         self._step = 0
         self._lastkeypress = ""
-        self._score = self.score
         self._enemies = [
             enemy(
                 pos,
@@ -187,6 +185,10 @@ class Game:
 
         if len(self._enemies) == 0:
             logger.info(f"Level {self.map.level} completed")
+            logger.info(self._score)
+            self._score += (self.map.level * TIMEOUT - self._total_steps) // 10 + \
+                self._digdug.lives * 1000  # update score before new level
+            logger.info(self._score)
             self.next_level(self.map.level + 1)
 
     def kill_digdug(self):
