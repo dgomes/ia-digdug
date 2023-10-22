@@ -151,7 +151,6 @@ class GameServer:
 
                     state = await self.game.next_frame()
                     state["player"] = self.current_player.name
-                    state["score"] = self.game._score
 
                     state = json.dumps(state)
 
@@ -168,7 +167,6 @@ class GameServer:
 
                 game_info = self.game.info()
                 game_info["player"] = self.current_player.name
-                game_info["score"] = self.game._score
 
                 await self.send_info(game_info, highscores=True)
                 await self.current_player.ws.close()
