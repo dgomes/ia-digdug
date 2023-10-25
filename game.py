@@ -235,6 +235,8 @@ class Game:
 
         self.update_digdug()
 
+        self.collision()
+
         for enemy in self._enemies:
             if enemy.alive:
                 enemy.move(self.map, self._digdug, self._enemies, self._rocks)
