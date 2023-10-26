@@ -42,7 +42,7 @@ class GameServer:
         self.players: asyncio.Queue[Player] = asyncio.Queue()
         self.viewers: Set[WebSocketCommonProtocol] = set()
         self.current_player: Player | None = None
-        self.grading = None  # TODO grading
+        self.grading = grading
         self._level = level  # game level
         self._timeout = timeout  # timeout for game
 
@@ -178,6 +178,7 @@ class GameServer:
                 try:
                     if self.grading:
                         game_record["score"] = self.game.score
+                        game_record["level"] = self.game.level 
                         requests.post(self.grading, json=game_record, timeout=2)
                 except RequestException as err:
                     logger.error(err)
@@ -196,7 +197,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--grading-server",
         help="url of grading server",
-        default="http://atnog-tetriscores.av.it.pt/game",
+        default="http://tetriscores.av.it.pt/game",
     )
     args = parser.parse_args()
 

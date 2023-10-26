@@ -92,6 +92,10 @@ class Game:
         self._rope = Rope(self.map)
 
     @property
+    def level(self):
+        return self.map.level
+
+    @property
     def running(self):
         return self._running
 
