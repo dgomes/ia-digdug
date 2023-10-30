@@ -373,6 +373,20 @@ async def main_game():
     state = {"score": 0, "player": "player1", "digdug": (1, 1)}
 
     while True:
+        if "size" in state and "map" in state:
+            # New level! lets clean everything up!
+            logger.info("New level! %s", state["level"])
+            mapa = Map(size=state["size"], mapa=state["map"])
+            BACKGROUND = draw_background(mapa)
+
+            SCREEN.blit(BACKGROUND, (0, 0))
+
+            main_group.empty()
+            enemies_group.empty()
+            weapons_group.empty()
+            main_group.add(DigDug(pos=mapa.digdug_spawn))
+            mapa.level = state["level"]
+
         if "digdug" in state:
             # dig through removing the stone drawned in the background
             pygame.draw.rect(
@@ -474,69 +488,54 @@ async def main_game():
         enemies_group.draw(SCREEN)
         weapons_group.draw(SCREEN)
 
+        if "highscores" in state:
+            highscores = state["highscores"]
+            if (f"<{state['player']}>", state["score"]) not in highscores:
+                highscores.append((f"<{state['player']}>", state["score"]))
+            highscores = sorted(highscores, key=lambda s: s[1], reverse=True)[:-1]
+            highscores = highscores[: len(RANKS)]
+
+            HIGHSCORES = pygame.Surface(scale((20, 16)))
+            HIGHSCORES.fill(COLORS["grey"])
+
+            draw_info(HIGHSCORES, "THE 10 BEST PLAYERS", scale((5, 1)), COLORS["white"])
+            draw_info(HIGHSCORES, "RANK", scale((2, 3)), COLORS["orange"])
+            draw_info(HIGHSCORES, "SCORE", scale((6, 3)), COLORS["orange"])
+            draw_info(HIGHSCORES, "NAME", scale((11, 3)), COLORS["orange"])
+
+            for i, highscore in enumerate(highscores):
+                c = (i % 5) + 1
+                draw_info(
+                    HIGHSCORES,
+                    RANKS[i + 1],
+                    scale((2, i + 5)),
+                    list(COLORS.values())[c],
+                )
+                draw_info(
+                    HIGHSCORES,
+                    str(highscore[1]),
+                    scale((6, i + 5)),
+                    list(COLORS.values())[c],
+                )
+                draw_info(
+                    HIGHSCORES,
+                    highscore[0],
+                    scale((11, i + 5)),
+                    list(COLORS.values())[c],
+                )
+
+            SCREEN.blit(
+                HIGHSCORES,
+                (
+                    (SCREEN.get_width() - HIGHSCORES.get_width()) / 2,
+                    (SCREEN.get_height() - HIGHSCORES.get_height()) / 2,
+                ),
+            )
+
         pygame.display.flip()
 
         try:
             state = json.loads(q.get_nowait())
-
-            if "size" in state and "map" in state:
-                # New level! lets clean everything up!
-                logger.info("New level! %s", state["level"])
-                mapa = Map(size=state["size"], mapa=state["map"])
-                BACKGROUND = draw_background(mapa)
-
-                SCREEN.blit(BACKGROUND, (0, 0))
-
-                main_group.empty()
-                enemies_group.empty()
-                weapons_group.empty()
-                main_group.add(DigDug(pos=mapa.digdug_spawn))
-                mapa.level = state["level"]
-            
-            if "highscores" in state:
-                highscores = state["highscores"]
-                if (f"<{state['player']}>", state["score"]) not in highscores:
-                    highscores.append((f"<{state['player']}>", state["score"]))
-                highscores = sorted(highscores, key=lambda s: s[1], reverse=True)[:-1]
-                highscores = highscores[: len(RANKS)]
-
-                HIGHSCORES = pygame.Surface(scale((20, 16)))
-                HIGHSCORES.fill(COLORS["grey"])
-
-                draw_info(HIGHSCORES, "THE 10 BEST PLAYERS", scale((5, 1)), COLORS["white"])
-                draw_info(HIGHSCORES, "RANK", scale((2, 3)), COLORS["orange"])
-                draw_info(HIGHSCORES, "SCORE", scale((6, 3)), COLORS["orange"])
-                draw_info(HIGHSCORES, "NAME", scale((11, 3)), COLORS["orange"])
-
-                for i, highscore in enumerate(highscores):
-                    c = (i % 5) + 1
-                    draw_info(
-                        HIGHSCORES,
-                        RANKS[i + 1],
-                        scale((2, i + 5)),
-                        list(COLORS.values())[c],
-                    )
-                    draw_info(
-                        HIGHSCORES,
-                        str(highscore[1]),
-                        scale((6, i + 5)),
-                        list(COLORS.values())[c],
-                    )
-                    draw_info(
-                        HIGHSCORES,
-                        highscore[0],
-                        scale((11, i + 5)),
-                        list(COLORS.values())[c],
-                    )
-
-                SCREEN.blit(
-                    HIGHSCORES,
-                    (
-                        (SCREEN.get_width() - HIGHSCORES.get_width()) / 2,
-                        (SCREEN.get_height() - HIGHSCORES.get_height()) / 2,
-                    ),
-                )
-
         except asyncio.queues.QueueEmpty:
             await asyncio.sleep(1.0 / GAME_SPEED)
             continue
