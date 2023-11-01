@@ -32,7 +32,7 @@ class Game(db.Model):
     level = db.Column(db.Integer)
     score = db.Column(db.Integer)
 
-    def __init__(self, player, level, score, total_steps):
+    def __init__(self, player, level, score):
         self.player = player
         self.level = level
         self.score = score
@@ -48,6 +48,9 @@ class GameSchema(ma.Schema):
 SINGLE_GAME_SCHEMA = GameSchema()
 ALL_GAME_SCHEMA = GameSchema(many=True)
 
+@app.route("/", methods=["GET"])
+def index():
+    return '<a href="/table.html">Nothing here to see</a>' 
 
 # endpoint to create new game
 @app.route("/game", methods=["POST"])
