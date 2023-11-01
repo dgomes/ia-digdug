@@ -6,7 +6,6 @@ from flask_marshmallow import Marshmallow
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import and_, func
 
-logger = logging.getLogger("IA Ranking")
 
 GRADES_FILE = "grades.sqlite"
 
@@ -17,6 +16,12 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(
 )
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
+
+flask_log = logging.getLogger("werkzeug")
+flask_log.setLevel(logging.WARNING)
+
+logger = logging.getLogger("IA Ranking")
+logger.setLevel(logging.INFO)
 
 
 # Data model
