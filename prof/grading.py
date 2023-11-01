@@ -1,0 +1,121 @@
+import logging
+import os
+
+from flask import Flask, jsonify, request, send_from_directory
+from flask_marshmallow import Marshmallow
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import and_, func
+
+logger = logging.getLogger("IA Ranking")
+
+GRADES_FILE = "grades.sqlite"
+
+app = Flask(__name__, static_url_path="")
+basedir = os.path.abspath(os.path.dirname(__file__))
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(
+    basedir, GRADES_FILE
+)
+db = SQLAlchemy(app)
+ma = Marshmallow(app)
+
+
+# Data model
+class Game(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    timestamp = db.Column(db.DateTime, server_default=db.func.now())
+    player = db.Column(db.String(25))
+    level = db.Column(db.Integer)
+    score = db.Column(db.Integer)
+    total_steps = db.Column(db.Integer)
+
+    def __init__(self, player, level, score, total_steps):
+        self.player = player
+        self.level = level
+        self.score = score
+        self.total_steps = total_steps
+
+
+# Schema
+class GameSchema(ma.Schema):
+    class Meta:
+        # Fields to expose
+        fields = ("id", "timestamp", "player", "level", "score", "total_steps")
+
+
+SINGLE_GAME_SCHEMA = GameSchema()
+ALL_GAME_SCHEMA = GameSchema(many=True)
+
+
+# endpoint to create new game
+@app.route("/game", methods=["POST"])
+def add_game():
+    if new_game := request.json:
+        logger.info(
+            "Player: %s, Score: %s", new_game.get("player"), new_game.get("score")
+        )
+        new_game = Game(
+            new_game.get("player"),
+            new_game.get("level"),
+            new_game.get("score"),
+            new_game.get("total_steps", -1),
+        )
+
+        db.session.add(new_game)
+        db.session.commit()
+
+        return SINGLE_GAME_SCHEMA.jsonify(new_game)
+
+    return jsonify({"error": "No game data"}), 400
+
+
+# Serve static files
+@app.route("/static/<path:path>")
+def send_static(path):
+    return send_from_directory("static", path)
+
+
+# endpoint to show highscores
+@app.route("/highscores", methods=["GET"])
+def get_game():
+    page = request.args.get("page", 1, type=int)
+
+    q = (
+        db.session.query(
+            Game.id,
+            Game.timestamp,
+            Game.player,
+            Game.level,
+            func.max(Game.score).label("score"),
+            Game.total_steps,
+        )
+        .group_by(Game.player)
+        .order_by(Game.score.desc(), Game.timestamp.desc())
+    )
+    logger.debug(q)
+
+    all_games = q.paginate(page, 20, False)
+
+    result = ALL_GAME_SCHEMA.dump(all_games.items)
+    return jsonify(result)
+
+
+# endpoint to show single player games
+@app.route("/highscores/<player>", methods=["GET"])
+def game_detail(player):
+    game = (
+        db.session.query(Game)
+        .filter(and_(Game.player == player, Game.score > 0))
+        .order_by(Game.score.desc())
+        .limit(10)
+    )
+    logger.debug(q)
+
+    result = ALL_GAME_SCHEMA.dump(game)
+    return jsonify(result)
+
+
+if __name__ == "__main__":
+    if not os.path.exists(GRADES_FILE):
+        db.create_all()
+
+    app.run(debug=False, host="0.0.0.0", port=80)
