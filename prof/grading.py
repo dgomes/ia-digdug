@@ -26,20 +26,18 @@ class Game(db.Model):
     player = db.Column(db.String(25))
     level = db.Column(db.Integer)
     score = db.Column(db.Integer)
-    total_steps = db.Column(db.Integer)
 
     def __init__(self, player, level, score, total_steps):
         self.player = player
         self.level = level
         self.score = score
-        self.total_steps = total_steps
 
 
 # Schema
 class GameSchema(ma.Schema):
     class Meta:
         # Fields to expose
-        fields = ("id", "timestamp", "player", "level", "score", "total_steps")
+        fields = ("id", "timestamp", "player", "level", "score")
 
 
 SINGLE_GAME_SCHEMA = GameSchema()
@@ -57,7 +55,6 @@ def add_game():
             new_game.get("player"),
             new_game.get("level"),
             new_game.get("score"),
-            new_game.get("total_steps", -1),
         )
 
         db.session.add(new_game)
@@ -86,14 +83,13 @@ def get_game():
             Game.player,
             Game.level,
             func.max(Game.score).label("score"),
-            Game.total_steps,
         )
         .group_by(Game.player)
         .order_by(Game.score.desc(), Game.timestamp.desc())
     )
     logger.debug(q)
 
-    all_games = q.paginate(page, 20, False)
+    all_games = q.paginate(page=page, per_page=20, error_out=False)
 
     result = ALL_GAME_SCHEMA.dump(all_games.items)
     return jsonify(result)
@@ -116,6 +112,7 @@ def game_detail(player):
 
 if __name__ == "__main__":
     if not os.path.exists(GRADES_FILE):
-        db.create_all()
+        with app.app_context():
+            db.create_all()
 
     app.run(debug=False, host="0.0.0.0", port=80)
