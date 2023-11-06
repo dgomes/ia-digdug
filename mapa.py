@@ -69,7 +69,8 @@ class Map:
                     logger.debug(f"Spawn enemy at ({column}, {offset})")
 
             # create rocks
-            if self._rocks:
+            if not self._rocks:
+                self._rocks = []
                 for r in range(self._level):
                     x, y = random.randrange(0, self.hor_tiles), random.randrange(
                         VITAL_SPACE + 1, self.ver_tiles - VITAL_SPACE
