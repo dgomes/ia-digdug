@@ -31,14 +31,21 @@ function generateTable(table, data,page) {
         for (element of data) {
                 i++;
                 row = table.insertRow();
+		row.setAttribute('id', "pos"+i);
                 for (key in element) {
                         cell = row.insertCell();
-                        if(key == "id") {       
-                                text = i; //show position not ID
+			if(key == "score" && element[key] < 10000) {
+				cell.setAttribute("style", "color:red;");
+			}
+                        if(key == "id") {
+				br = document.createElement("b");
+				ii = document.createTextNode(i); //show position not ID
+				br.appendChild(ii);
+                        	cell.appendChild(br);
                         } else {
                                 text = element[key];
+                        	cell.appendChild(document.createTextNode(text));
                         }
-                        cell.appendChild(document.createTextNode(text));
                 }
         }
 }
