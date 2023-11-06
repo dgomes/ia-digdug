@@ -12,8 +12,7 @@ class Map:
     def __init__(
         self,
         level=1,
-        enemies=0,
-        rocks=[],
+        rocks=None,
         size=(VITAL_SPACE + 10, VITAL_SPACE + 10),
         mapa=None,
         enemies_spawn=None,
@@ -26,7 +25,7 @@ class Map:
         self._size = size
         self.hor_tiles = size[0]
         self.ver_tiles = size[1]
-        self._rocks = rocks
+        self._rocks = rocks 
         self._digged = []
         if enemies_spawn:
             self._enemies_spawn = enemies_spawn
@@ -70,7 +69,7 @@ class Map:
                     logger.debug(f"Spawn enemy at ({column}, {offset})")
 
             # create rocks
-            if self._rocks == []:
+            if self._rocks:
                 for r in range(self._level):
                     x, y = random.randrange(0, self.hor_tiles), random.randrange(
                         VITAL_SPACE + 1, self.ver_tiles - VITAL_SPACE
