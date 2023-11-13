@@ -178,7 +178,7 @@ class GameServer:
                 try:
                     if self.grading:
                         game_record["score"] = self.game.score
-                        game_record["level"] = self.game.level 
+                        game_record["level"] = self.game.level
                         requests.post(self.grading, json=game_record, timeout=2)
                 except RequestException as err:
                     logger.error(err)

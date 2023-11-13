@@ -25,7 +25,7 @@ class Map:
         self._size = size
         self.hor_tiles = size[0]
         self.ver_tiles = size[1]
-        self._rocks = rocks 
+        self._rocks = rocks
         self._digged = []
         if enemies_spawn:
             self._enemies_spawn = enemies_spawn

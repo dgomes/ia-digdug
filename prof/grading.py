@@ -48,9 +48,11 @@ class GameSchema(ma.Schema):
 SINGLE_GAME_SCHEMA = GameSchema()
 ALL_GAME_SCHEMA = GameSchema(many=True)
 
+
 @app.route("/", methods=["GET"])
 def index():
-    return '<a href="/table.html">Nothing here to see</a>' 
+    return '<a href="/table.html">Nothing here to see</a>'
+
 
 # endpoint to create new game
 @app.route("/game", methods=["POST"])
