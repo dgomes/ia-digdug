@@ -275,9 +275,9 @@ class Game:
 
         for e in self._enemies:
             self._state["enemies"].append(
-                {"name": str(e), "id": str(e.id), "pos": e.pos, "dir": e.lastdir}
+                {"name": e.name, "id": str(e.id), "pos": e.pos, "dir": e.lastdir}
             )
-            if e._name == "Fygar" and e.fire:
+            if e.name == "Fygar" and e.fire:
                 self._state["enemies"][-1]["fire"] = e.fire
             if e.traverse:
                 self._state["enemies"][-1]["traverse"] = e.traverse

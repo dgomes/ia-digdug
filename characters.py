@@ -133,6 +133,10 @@ class Enemy(Character):
     def traverse(self):
         return self._wallpass
 
+    @property
+    def name(self):
+        return self._name
+
     def __str__(self):
         return f"{self._name}({self.pos}, {self._wallpass}, {self._smart})"
 
