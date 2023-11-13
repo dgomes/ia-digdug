@@ -214,9 +214,11 @@ class Game:
                 e.respawn()
             if e._name == "Fygar" and e.fire:
                 if self._digdug.pos in e.fire:
+                    logger.debug(f"{e} has killed {self._digdug} with fire")
                     self.kill_digdug()
         for r in self._rocks:
             if r.pos == self._digdug.pos:
+                logger.debug(f"{r} has killed {self._digdug}")
                 self.kill_digdug()
             for e in self._enemies:
                 if r.pos == e.pos:
