@@ -205,9 +205,9 @@ class Game:
         return True
 
     def kill_digdug(self):
-        logger.info(f"Dig Dug has died on step: {self._step}")
+        logger.info("Dig Dug has died on step: %s", self._step)
         self._digdug.kill()
-        logger.debug(f"Dig Dug has now {self._digdug.lives} lives")
+        logger.debug("Dig Dug has now %s lives", self._digdug.lives)
         if self._digdug.lives > 0:
             logger.debug("RESPAWN")
             self._digdug.respawn()
@@ -221,16 +221,16 @@ class Game:
     def collision(self):
         for e in self._enemies:
             if e.pos == self._digdug.pos:
-                logger.debug(f"{e} has killed {self._digdug}")
+                logger.debug("%s has killed %s", e, self._digdug)
                 self.kill_digdug()
                 e.respawn()
             if e._name == "Fygar" and e.fire:
                 if self._digdug.pos in e.fire:
-                    logger.debug(f"{e} has killed {self._digdug} with fire")
+                    logger.debug("%s has killed %s with fire", e, self._digdug)
                     self.kill_digdug()
         for r in self._rocks:
             if r.pos == self._digdug.pos:
-                logger.debug(f"{r} has killed {self._digdug}")
+                logger.debug("%s has killed %s", r, self._digdug)
                 self.kill_digdug()
             for e in self._enemies:
                 if r.pos == e.pos:

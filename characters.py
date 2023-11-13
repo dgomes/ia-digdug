@@ -159,6 +159,9 @@ class Enemy(Character):
     def name(self):
         return self._name
 
+    def __repr__(self) -> str:
+        return str(self)
+
     def __str__(self):
         return f"{self._name}({self.pos}, {self._wallpass}, {self._smart})"
 
