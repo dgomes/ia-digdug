@@ -201,6 +201,8 @@ class Game:
                 self.map.level * TIMEOUT - self._total_steps
             ) // 10  # update score before new level
             self.next_level(self.map.level + 1)
+            return False
+        return True
 
     def kill_digdug(self):
         logger.info(f"Dig Dug has died on step: {self._step}")
@@ -251,7 +253,8 @@ class Game:
                 f"[{self._step}] SCORE {self._score} - LIVES {self._digdug.lives}"
             )
 
-        self.update_digdug()
+        if not self.update_digdug():
+            return # if update_digdug returns false, we have a new level and we stop right here
 
         self.collision()
 
