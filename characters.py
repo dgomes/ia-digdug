@@ -69,6 +69,9 @@ class Rock(Character):
         self.id = uuid.uuid4()
         self._falling = random.randint(3, 9)  # we never known when the rock will fall
 
+    def to_dict(self):
+        return {"id": str(self.id), "pos": self.pos}
+
     def move(self, mapa, digdug, rocks):
         open_pos = mapa.calc_pos(self.pos, Direction.SOUTH, traverse=False)
         if open_pos in [r.pos for r in rocks]:  # don't fall on other rocks
@@ -128,6 +131,9 @@ class Enemy(Character):
         self._points = None
         super().__init__(*pos)
         logger.info("Enemy %s created at %s with Smart.%s", self._name, self.pos,self._smart.name)
+
+    def to_dict(self):
+        return  {"name": self.name, "id": str(self.id), "pos": self.pos, "dir": self.lastdir}
 
     @property
     def traverse(self):
