@@ -130,6 +130,8 @@ class Map:
         x, y = pos
         if x not in range(self.hor_tiles) or y not in range(self.ver_tiles):
             return True
+        if pos in self._rocks:
+            return True
         if self.map[x][y] == Tiles.PASSAGE:
             return False
         if self.map[x][y] == Tiles.STONE:
