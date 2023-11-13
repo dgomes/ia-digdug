@@ -57,6 +57,10 @@ class Character:
     def y(self):
         return self._pos[1]
 
+    @property
+    def __str__(self) -> str:
+        return f"{self.__class__.__name__}({self._pos})"
+
     def respawn(self):
         self.pos = self._spawn_pos
 
