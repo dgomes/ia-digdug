@@ -209,6 +209,7 @@ class Game:
     def collision(self):
         for e in self._enemies:
             if e.pos == self._digdug.pos:
+                logger.debug(f"{e} has killed {self._digdug}")
                 self.kill_digdug()
                 e.respawn()
             if e._name == "Fygar" and e.fire:
