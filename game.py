@@ -47,7 +47,7 @@ class Rope:
     def to_dict(self):
         return {"dir": self._dir, "pos": self._pos}
 
-    def shoot(self, pos, direction):
+    def shoot(self, pos, direction, _rocks):
         if self._dir and direction != self._dir:
             self._pos = []  # reset rope because digdug changed direction
             self._dir = None
@@ -58,7 +58,7 @@ class Rope:
         else:
             new_pos = self._map.calc_pos(pos, direction, traverse=False)
 
-        if new_pos in [r.pos for r in self._rocks]: # we hit a rock
+        if new_pos in [r.pos for r in _rocks]: # we hit a rock
             self._pos = []
             self._dir = None
             return
@@ -161,7 +161,7 @@ class Game:
             for enemy, pos in zip(level_enemies(level), self.map.enemies_spawn)
         ]
         logger.debug("Enemies: %s", self._enemies)
-        self._rocks = [Rock(p) for p in self.map._rocks]
+        self._rocks = [Rock(p) for p in self.map.rocks_spawn]
 
     def quit(self):
         logger.debug("Quit")
@@ -177,7 +177,7 @@ class Game:
             if self._lastkeypress.isupper():
                 # Parse action
                 if self._lastkeypress in "AB":
-                    self._rope.shoot(self._digdug.pos, self._digdug.direction)
+                    self._rope.shoot(self._digdug.pos, self._digdug.direction, self._rocks)
                     if self._rope.hit(self._enemies):
                         logger.debug("Enemy hit with rope")
             else:
