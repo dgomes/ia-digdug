@@ -58,6 +58,11 @@ class Rope:
         else:
             new_pos = self._map.calc_pos(pos, direction, traverse=False)
 
+        if new_pos in [r.pos for r in self._rocks]: # we hit a rock
+            self._pos = []
+            self._dir = None
+            return
+
         if new_pos in self._pos:  # we hit a wall
             self._pos = []
             self._dir = None
