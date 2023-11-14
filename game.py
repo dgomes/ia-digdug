@@ -179,7 +179,7 @@ class Game:
                 if self._lastkeypress in "AB":
                     self._rope.shoot(self._digdug.pos, self._digdug.direction, self._rocks)
                     if self._rope.hit(self._enemies):
-                        logger.debug("Enemy hit with rope")
+                        logger.debug("[step=%s] Enemy hit with rope", self._step)
             else:
                 # if digdug moves we let go of the rope
                 if self._lastkeypress in "wasd" and self._lastkeypress != "":
@@ -210,9 +210,9 @@ class Game:
         return True
 
     def kill_digdug(self):
-        logger.info("Dig Dug has died on step: %s", self._step)
+        logger.info("[step=%s] Dig Dug has died", self._step)
         self._digdug.kill()
-        logger.debug("Dig Dug has now %s lives", self._digdug.lives)
+        logger.debug("[step=%s] Dig Dug has now %s lives", self._step, self._digdug.lives)
         if self._digdug.lives > 0:
             logger.debug("RESPAWN")
             self._digdug.respawn()
@@ -226,16 +226,16 @@ class Game:
     def collision(self):
         for e in self._enemies:
             if e.pos == self._digdug.pos:
-                logger.debug("%s has killed %s", e, self._digdug)
+                logger.debug("[step=%s] %s has killed %s", self._step, e, self._digdug)
                 self.kill_digdug()
                 e.respawn()
             if e._name == "Fygar" and e.fire:
                 if self._digdug.pos in e.fire:
-                    logger.debug("%s has killed %s with fire", e, self._digdug)
+                    logger.debug("[step=%s] %s has killed %s with fire", self._step, e, self._digdug)
                     self.kill_digdug()
         for r in self._rocks:
             if r.pos == self._digdug.pos:
-                logger.debug("%s has killed %s", r, self._digdug)
+                logger.debug("[step=%s] %s has killed %s", self._step, r, self._digdug)
                 self.kill_digdug()
             for e in self._enemies:
                 if r.pos == e.pos:
