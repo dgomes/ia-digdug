@@ -531,6 +531,8 @@ async def main_game():
                     (SCREEN.get_height() - HIGHSCORES.get_height()) / 2,
                 ),
             )
+            pygame.display.flip()   #Show highscores and wait for a new game
+            break
 
         pygame.display.flip()
 
