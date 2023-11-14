@@ -179,7 +179,7 @@ class Game:
                 if self._lastkeypress in "AB":
                     self._rope.shoot(self._digdug.pos, self._digdug.direction, self._rocks)
                     if self._rope.hit(self._enemies):
-                        logger.debug("[step=%s] Enemy hit with rope", self._step)
+                        logger.debug("[step=%s] Enemy hit with rope(%s) - enemies: %s", self._step, self._rope.to_dict(), self._enemies)
             else:
                 # if digdug moves we let go of the rope
                 if self._lastkeypress in "wasd" and self._lastkeypress != "":
