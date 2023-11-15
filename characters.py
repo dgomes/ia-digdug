@@ -67,6 +67,17 @@ class Character:
     def move(self, mapa, rocks):
         raise NotImplementedError
 
+    def _calc_dir(self, old_pos, new_pos):
+        if old_pos[0] < new_pos[0]:
+            return Direction.EAST
+        elif old_pos[0] > new_pos[0]:
+            return Direction.WEST
+        elif old_pos[1] < new_pos[1]:
+            return Direction.SOUTH
+        elif old_pos[1] > new_pos[1]:
+            return Direction.NORTH
+        return None
+
 
 class Rock(Character):
     def __init__(self, pos):
@@ -236,6 +247,7 @@ class Enemy(Character):
                     open_pos, key=lambda pos: math.dist(digdug.pos, pos), reverse=True
                 )
                 new_pos = next_pos[0]
+            self.lastdir = self._calc_dir(self.lastpos, self.pos)
 
         elif self._smart == Smart.HIGH:
             enemies_pos = [e.pos for e in enemies if e.id != self.id]
@@ -252,6 +264,8 @@ class Enemy(Character):
             else:
                 next_pos = sorted(open_pos, key=lambda pos: math.dist(digdug.pos, pos))
                 new_pos = next_pos[0]
+            self.lastdir = self._calc_dir(self.lastpos, self.pos)
+
         self.lastpos = self.pos
         self.pos = new_pos
 
@@ -271,17 +285,6 @@ class Pooka(Enemy):
     def __init__(self, pos, smart=Smart.NORMAL):
         super().__init__(pos, self.__class__.__name__, Speed.FAST, smart, False)
         self.go_to_corridor = pos
-
-    def _calc_dir(self, old_pos, new_pos):
-        if old_pos[0] < new_pos[0]:
-            return Direction.EAST
-        elif old_pos[0] > new_pos[0]:
-            return Direction.WEST
-        elif old_pos[1] < new_pos[1]:
-            return Direction.SOUTH
-        elif old_pos[1] > new_pos[1]:
-            return Direction.NORTH
-        return None
 
     def move(self, mapa, digdug, enemies, rocks):
         if not self._wallpass:
