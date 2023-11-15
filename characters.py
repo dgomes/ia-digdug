@@ -182,7 +182,7 @@ class Enemy(Character):
         return str(self)
 
     def __str__(self):
-        return f"{self._name}({self.pos}, {self._wallpass}, {self._smart})"
+        return f"{self._name}({self.pos}, {self._wallpass}, {self._smart.name})"
 
     def points(self, map_height):
         if self._points:
@@ -271,7 +271,7 @@ class Enemy(Character):
 
         self.lastpos = self.pos
         self.pos = new_pos
-        if self._smart in [Smart.NORMAL, Smart.HIGH] and self.lastpos != self.pos:
+        if self._smart in [Smart.NORMAL, Smart.HIGH] and self.lastpos != self.pos:  # LOW does not require direction calculation
             self.lastdir = self._calc_dir(self.lastpos, self.pos)
 
         if math.dist(self.pos, (0, 0)) < 1:
