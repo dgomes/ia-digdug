@@ -149,7 +149,7 @@ class Enemy(Character):
         self.dir = list(Direction)
         self.step = 0
         self.lastdir = Direction.EAST
-        self.lastpos = None
+        self.lastpos = pos
         self.freeze = False
         self._alive = lives  # TODO increase according to level
         self.exit = False
