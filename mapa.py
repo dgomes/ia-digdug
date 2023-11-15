@@ -111,7 +111,7 @@ class Map:
     @property
     def enemies_spawn(self):
         return self._enemies_spawn
-    
+
     @property
     def rocks_spawn(self):
         return self._rocks

@@ -150,7 +150,7 @@ class GameServer:
                         game_info = self.game.info()
                         await self.send_info(game_info)
 
-                    if state:= await self.game.next_frame():
+                    if state := await self.game.next_frame():
                         state["player"] = self.current_player.name
                         state["ts"] = datetime.utcnow().astimezone().timestamp()
                         state = json.dumps(state)

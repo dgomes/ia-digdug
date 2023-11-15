@@ -1,6 +1,6 @@
 requests
 pygame
 aiohttp
-async - timeout
+async-timeout
 websockets
 yarl

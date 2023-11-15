@@ -58,7 +58,7 @@ class Rope:
         else:
             new_pos = self._map.calc_pos(pos, direction, traverse=False)
 
-        if new_pos in [r.pos for r in _rocks]: # we hit a rock
+        if new_pos in [r.pos for r in _rocks]:  # we hit a rock
             self._pos = []
             self._dir = None
             return
@@ -177,9 +177,16 @@ class Game:
             if self._lastkeypress.isupper():
                 # Parse action
                 if self._lastkeypress in "AB":
-                    self._rope.shoot(self._digdug.pos, self._digdug.direction, self._rocks)
+                    self._rope.shoot(
+                        self._digdug.pos, self._digdug.direction, self._rocks
+                    )
                     if self._rope.hit(self._enemies):
-                        logger.debug("[step=%s] Enemy hit with rope(%s) - enemies: %s", self._step, self._rope.to_dict(), self._enemies)
+                        logger.debug(
+                            "[step=%s] Enemy hit with rope(%s) - enemies: %s",
+                            self._step,
+                            self._rope.to_dict(),
+                            self._enemies,
+                        )
             else:
                 # if digdug moves we let go of the rope
                 if self._lastkeypress in "wasd" and self._lastkeypress != "":
@@ -212,7 +219,9 @@ class Game:
     def kill_digdug(self):
         logger.info("[step=%s] Dig Dug has died", self._step)
         self._digdug.kill()
-        logger.debug("[step=%s] Dig Dug has now %s lives", self._step, self._digdug.lives)
+        logger.debug(
+            "[step=%s] Dig Dug has now %s lives", self._step, self._digdug.lives
+        )
         if self._digdug.lives > 0:
             logger.debug("RESPAWN")
             self._digdug.respawn()
@@ -231,7 +240,12 @@ class Game:
                 e.respawn()
             if e._name == "Fygar" and e.fire:
                 if self._digdug.pos in e.fire:
-                    logger.debug("[step=%s] %s has killed %s with fire", self._step, e, self._digdug)
+                    logger.debug(
+                        "[step=%s] %s has killed %s with fire",
+                        self._step,
+                        e,
+                        self._digdug,
+                    )
                     self.kill_digdug()
         for r in self._rocks:
             if r.pos == self._digdug.pos:
@@ -259,7 +273,7 @@ class Game:
             )
 
         if not self.update_digdug():
-            return # if update_digdug returns false, we have a new level and we stop right here
+            return  # if update_digdug returns false, we have a new level and we stop right here
 
         self.collision()
 
