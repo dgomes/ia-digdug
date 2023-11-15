@@ -272,6 +272,17 @@ class Pooka(Enemy):
         super().__init__(pos, self.__class__.__name__, Speed.FAST, smart, False)
         self.go_to_corridor = pos
 
+    def _calc_dir(self, old_pos, new_pos):
+        if old_pos[0] < new_pos[0]:
+            return Direction.EAST
+        elif old_pos[0] > new_pos[0]:
+            return Direction.WEST
+        elif old_pos[1] < new_pos[1]:
+            return Direction.SOUTH
+        elif old_pos[1] > new_pos[1]:
+            return Direction.NORTH
+        return None
+
     def move(self, mapa, digdug, enemies, rocks):
         if not self._wallpass:
             self._wallpass = random.random() < WALLPASS_ODD[self._smart]
@@ -294,6 +305,7 @@ class Pooka(Enemy):
                 new_pos = next_pos[0]
             self.lastpos = self.pos
             self.pos = new_pos
+            self.lastdir = self._calc_dir(self.lastpos, self.pos)
         else:
             super().move(mapa, digdug, enemies, rocks)
         if self._wallpass and not mapa.is_blocked(self.pos, False):
