@@ -76,6 +76,11 @@ class Character:
             return Direction.SOUTH
         elif old_pos[1] > new_pos[1]:
             return Direction.NORTH
+        logger.error(
+            "Can't calculate direction from %s to %s, please report as this is a bug",
+            old_pos,
+            new_pos,
+        )
         return None
 
 
@@ -247,7 +252,8 @@ class Enemy(Character):
                     open_pos, key=lambda pos: math.dist(digdug.pos, pos), reverse=True
                 )
                 new_pos = next_pos[0]
-            self.lastdir = self._calc_dir(self.lastpos, self.pos)
+            if self.lastpos != self.pos:
+                self.lastdir = self._calc_dir(self.lastpos, self.pos)
 
         elif self._smart == Smart.HIGH:
             enemies_pos = [e.pos for e in enemies if e.id != self.id]
@@ -264,7 +270,8 @@ class Enemy(Character):
             else:
                 next_pos = sorted(open_pos, key=lambda pos: math.dist(digdug.pos, pos))
                 new_pos = next_pos[0]
-            self.lastdir = self._calc_dir(self.lastpos, self.pos)
+            if self.lastpos != self.pos:
+                self.lastdir = self._calc_dir(self.lastpos, self.pos)
 
         self.lastpos = self.pos
         self.pos = new_pos
@@ -308,7 +315,8 @@ class Pooka(Enemy):
                 new_pos = next_pos[0]
             self.lastpos = self.pos
             self.pos = new_pos
-            self.lastdir = self._calc_dir(self.lastpos, self.pos)
+            if self.lastpos != self.pos:
+                self.lastdir = self._calc_dir(self.lastpos, self.pos)
         else:
             super().move(mapa, digdug, enemies, rocks)
         if self._wallpass and not mapa.is_blocked(self.pos, False):
