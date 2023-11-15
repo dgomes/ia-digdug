@@ -252,8 +252,6 @@ class Enemy(Character):
                     open_pos, key=lambda pos: math.dist(digdug.pos, pos), reverse=True
                 )
                 new_pos = next_pos[0]
-            if self.lastpos != self.pos:
-                self.lastdir = self._calc_dir(self.lastpos, self.pos)
 
         elif self._smart == Smart.HIGH:
             enemies_pos = [e.pos for e in enemies if e.id != self.id]
@@ -270,11 +268,11 @@ class Enemy(Character):
             else:
                 next_pos = sorted(open_pos, key=lambda pos: math.dist(digdug.pos, pos))
                 new_pos = next_pos[0]
-            if self.lastpos != self.pos:
-                self.lastdir = self._calc_dir(self.lastpos, self.pos)
 
         self.lastpos = self.pos
         self.pos = new_pos
+        if self._smart in [Smart.NORMAL, Smart.HIGH] and self.lastpos != self.pos:
+            self.lastdir = self._calc_dir(self.lastpos, self.pos)
 
         if math.dist(self.pos, (0, 0)) < 1:
             self.exit = True
