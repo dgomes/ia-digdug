@@ -233,6 +233,8 @@ class Game:
             self.stop()
 
     def collision(self):
+        if not self._running:   # if game is not running, we don't need to check collisions
+            return
         for e in self._enemies:
             if e.pos == self._digdug.pos:
                 logger.debug("[step=%s] %s has killed %s", self._step, e, self._digdug)
