@@ -3,6 +3,7 @@ import asyncio
 import json
 import logging
 import os
+import sys
 
 import pygame
 import websockets
@@ -396,9 +397,18 @@ async def main_game():
         if "highscores" not in state:
             SCREEN.blit(BACKGROUND, (0, 0))
 
-        pygame.event.pump()
+        def quit():
+            #clean up and exit
+            pygame.display.quit()
+            pygame.quit()
+            sys.exit(0)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                quit()
+
         if pygame.key.get_pressed()[pygame.K_ESCAPE]:
-            asyncio.get_event_loop().stop()
+            quit()
 
         main_group.clear(SCREEN, clear_callback)
         weapons_group.clear(SCREEN, clear_callback)
