@@ -2,6 +2,7 @@ import logging
 import math
 import random
 import uuid
+from collections import deque
 
 from consts import (
     BED_POINTS,
@@ -19,6 +20,8 @@ from consts import (
 )
 from mapa import VITAL_SPACE
 
+HISTORY_LEN = 10
+
 logger = logging.getLogger("Characters")
 logger.setLevel(logging.INFO)
 
@@ -28,6 +31,11 @@ class Character:
         self._pos = x, y
         self._spawn_pos = self._pos
         self._direction: Direction = Direction.EAST
+        self._history = deque(maxlen=HISTORY_LEN)
+
+    @property
+    def history(self):
+        return str(list(self._history))
 
     @property
     def pos(self):
@@ -129,6 +137,7 @@ class DigDug(Character):
         self._lives -= 1
 
     def move(self, mapa, direction, enemies, rocks):
+        self._history.append(self.pos)
         new_pos = mapa.calc_pos(self.pos, direction)
 
         if new_pos not in [r.pos for r in rocks]:  # don't bump into rocks
@@ -136,7 +145,7 @@ class DigDug(Character):
             mapa.dig(self.pos)
 
     def __str__(self):
-        return f"DigDug({self.pos}, lives={self._lives})"
+        return f"DigDug({self.pos}, lives={self._lives}, history={self.history})"
 
 
 class Enemy(Character):
@@ -182,7 +191,7 @@ class Enemy(Character):
         return str(self)
 
     def __str__(self):
-        return f"{self._name}({self.pos}, {self._alive}, {self._wallpass}, {self._smart.name})"
+        return f"{self._name}({self.pos}, {self._alive}, {self._wallpass}, {self._smart.name}, {self.history})"
 
     def points(self, map_height):
         if self._points:
@@ -215,6 +224,7 @@ class Enemy(Character):
         return self._alive > 0
 
     def move(self, mapa, digdug, enemies, rocks):
+        self._history.append(self.pos)
         if not self.ready():
             return
 
