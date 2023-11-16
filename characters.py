@@ -182,7 +182,7 @@ class Enemy(Character):
         return str(self)
 
     def __str__(self):
-        return f"{self._name}({self.pos}, {self._wallpass}, {self._smart.name})"
+        return f"{self._name}({self.pos}, {self._alive}, {self._wallpass}, {self._smart.name})"
 
     def points(self, map_height):
         if self._points:
@@ -224,7 +224,7 @@ class Enemy(Character):
             )  # Give it a chance to come back to life
             return
 
-        if self.freeze:
+        if self.freeze: # TODO move to fygar
             self.freeze = False
             self.fire = []
             return

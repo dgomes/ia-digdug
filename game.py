@@ -182,10 +182,11 @@ class Game:
                     )
                     if self._rope.hit(self._enemies):
                         logger.debug(
-                            "[step=%s] Enemy hit with rope(%s) - enemies: %s",
+                            "[step=%s] Enemy hit with rope(%s) - enemies: %s - digdug: %s",
                             self._step,
                             self._rope.to_dict(),
                             self._enemies,
+                            self._digdug,
                         )
             else:
                 # if digdug moves we let go of the rope
