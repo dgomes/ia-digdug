@@ -1,6 +1,5 @@
 """Network Game Server."""
 from __future__ import annotations
-
 import argparse
 import asyncio
 from datetime import datetime
@@ -36,8 +35,9 @@ MAX_HIGHSCORES = 10
 class GameServer:
     """Network Game Server."""
 
-    def __init__(self, level: int, timeout: int, seed: int = 0, grading: str = None):
+    def __init__(self, level: int, timeout: int, seed: int = 0, grading: str = None, dbg: bool = False):
         """Initialize Gameserver."""
+        self.dbg = dbg
         self.seed = seed
         self.game = Game()
         self.players: asyncio.Queue[Player] = asyncio.Queue()
@@ -123,6 +123,23 @@ class GameServer:
             if websocket in self.viewers:
                 self.viewers.remove(websocket)
 
+    def debug_map(self, mapa):
+        from PIL import Image
+        from consts import Tiles
+
+        img = Image.new("RGB", mapa.size, "black")  # Create a new black image
+        pixels = img.load()  # Create the pixel map
+        for i in range(img.size[0]):  # For every pixel:
+            for j in range(img.size[1]):
+                if mapa.map[i][j] == Tiles.STONE:
+                    pixels[i, j] = (148, 91, 20)
+        for x, j in mapa._rocks:
+            pixels[x, j] = (255, 255, 255)
+        for x, j in mapa.digged:
+            pixels[x, j] = (150, 150, 150)
+
+        img.show()
+
     async def mainloop(self):
         """Run the game."""
         while True:
@@ -164,6 +181,9 @@ class GameServer:
                                 self.viewers.remove(viewer)
                                 break
 
+                if self.dbg:
+                    self.debug_map(self.game.map)
+
                 self.save_highscores(self.game.score)
 
                 game_info = self.game.info()
@@ -195,6 +215,7 @@ if __name__ == "__main__":
     parser.add_argument("--bind", help="IP address to bind to", default="")
     parser.add_argument("--port", help="TCP port", type=int, default=8000)
     parser.add_argument("--seed", help="Seed number", type=int, default=0)
+    parser.add_argument("--debug", help="Open Bitmap with map on gameover", action='store_true')
     parser.add_argument(
         "--grading-server",
         help="url of grading server",
@@ -204,7 +225,7 @@ if __name__ == "__main__":
 
     async def main():
         """Start server tasks."""
-        g = GameServer(0, -1, args.seed, args.grading_server)
+        g = GameServer(0, -1, args.seed, args.grading_server, args.debug)
 
         game_loop_task = asyncio.ensure_future(g.mainloop())
 
