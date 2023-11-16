@@ -292,9 +292,6 @@ class Pooka(Enemy):
         self.go_to_corridor = pos
 
     def move(self, mapa, digdug, enemies, rocks):
-        if not self._wallpass:
-            self._wallpass = random.random() < WALLPASS_ODD[self._smart]
-
         if self._wallpass:
             open_pos = [
                 pos
@@ -320,6 +317,9 @@ class Pooka(Enemy):
         if self._wallpass and not mapa.is_blocked(self.pos, False):
             self._wallpass = False
             self.go_to_corridor = random.choice(mapa.enemies_spawn)
+        
+        if not self._wallpass:
+            self._wallpass = random.random() < WALLPASS_ODD[self._smart]
 
 
 class Fygar(Enemy):
