@@ -123,7 +123,7 @@ class GameServer:
             if websocket in self.viewers:
                 self.viewers.remove(websocket)
 
-    def debug_map(self, mapa):
+    def debug_map(self, mapa, digdug, enemies):
         from PIL import Image
         from consts import Tiles
 
@@ -137,6 +137,9 @@ class GameServer:
             pixels[x, j] = (255, 255, 255)
         for x, j in mapa.digged:
             pixels[x, j] = (150, 150, 150)
+        pixels[digdug.x, digdug.y] = (0, 0, 255)
+        for enemy in enemies:
+            pixels[enemy.x, enemy.y] = (255, 0, 0)
 
         img.show()
 
@@ -181,8 +184,8 @@ class GameServer:
                                 self.viewers.remove(viewer)
                                 break
 
-                if self.dbg:
-                    self.debug_map(self.game.map)
+                        if self.dbg and self.game.respawn:
+                            self.debug_map(self.game.map, self.game._digdug, self.game._enemies)
 
                 self.save_highscores(self.game.score)
 
