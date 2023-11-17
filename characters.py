@@ -105,6 +105,10 @@ class Rock(Character):
     def __str__(self):
         return f"Rock({self.pos})"
 
+    @property
+    def position(self):
+        return self.pos
+
     def move(self, mapa, digdug, rocks):
         open_pos = mapa.calc_pos(self.pos, Direction.SOUTH, traverse=False)
         if open_pos in [r.pos for r in rocks]:  # don't fall on other rocks
