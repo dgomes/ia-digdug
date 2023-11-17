@@ -304,6 +304,7 @@ class Pooka(Enemy):
 
     def move(self, mapa, digdug, enemies, rocks):
         if self._wallpass:
+            self._history.append(self.pos)
             open_pos = [
                 pos
                 for pos in [
