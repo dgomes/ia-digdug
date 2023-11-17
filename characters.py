@@ -70,6 +70,7 @@ class Character:
         return f"{self.__class__.__name__}({self._pos})"
 
     def respawn(self):
+        logger.debug("RESPAWN %s @ %s", self, self._spawn_pos)
         self.pos = self._spawn_pos
 
     def move(self, mapa, rocks):
