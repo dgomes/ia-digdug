@@ -140,7 +140,7 @@ class GameServer:
         pixels[digdug.x, digdug.y] = (0, 0, 255)
         for enemy in enemies:
             pixels[enemy.x, enemy.y] = (255, 0, 0)
-        img.PIL.save("lives_{_digdug.lives}.png")
+        img.save("lives_{_digdug.lives}.png")
         img.show()
 
     async def mainloop(self):
