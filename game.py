@@ -219,6 +219,8 @@ class Game:
         return True
 
     def kill_digdug(self):
+        if self.respawn:    #we are already dead, no need to kill again
+            return
         logger.info("[step=%s] Dig Dug has died", self._step)
         self._digdug.kill()
         logger.debug(
