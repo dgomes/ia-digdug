@@ -294,7 +294,6 @@ class Game:
         for rock in self._rocks:
             rock.move(self.map, digdug=self._digdug, rocks=self._rocks)
 
-        self.map.rocks_spawn = self._rocks # update rocks for mapa is_blocked
 
         self._score += sum(
             [e.points(self.map.ver_tiles) for e in self._enemies if not e.alive]

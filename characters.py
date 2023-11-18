@@ -105,10 +105,6 @@ class Rock(Character):
     def __str__(self):
         return f"Rock({self.pos})"
 
-    @property
-    def position(self):
-        return self.pos
-
     def move(self, mapa, digdug, rocks):
         open_pos = mapa.calc_pos(self.pos, Direction.SOUTH, traverse=False)
         if open_pos in [r.pos for r in rocks]:  # don't fall on other rocks
@@ -351,6 +347,7 @@ class Fygar(Enemy):
 
     def move(self, mapa, digdug, enemies, rocks):
         super().move(mapa, digdug, enemies, rocks)
+        rocks_pos = [r.pos for r in rocks]
 
         fire_odd = 0.5 if digdug.pos[1] == self.pos[1] else 0.1
         if (
@@ -362,8 +359,10 @@ class Fygar(Enemy):
             for _ in range(3):
                 pos = mapa.calc_pos(pos, self.dir[self.lastdir], traverse=False)
                 if (
-                    pos not in self.fire and pos != self.pos
-                ):  # Make sure we don't fire on ourselves:
+                    pos not in self.fire and
+                    pos != self.pos and
+                    pos not in rocks_pos
+                ):  # Make sure we don't fire on ourselves and prevent fire through rocks
                     self.fire.append(pos)
                 else:
                     break
