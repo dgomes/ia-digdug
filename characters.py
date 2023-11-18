@@ -347,7 +347,6 @@ class Fygar(Enemy):
 
     def move(self, mapa, digdug, enemies, rocks):
         super().move(mapa, digdug, enemies, rocks)
-        rocks_pos = [r.pos for r in rocks]
 
         fire_odd = 0.5 if digdug.pos[1] == self.pos[1] else 0.1
         if (
@@ -361,7 +360,7 @@ class Fygar(Enemy):
                 if (
                     pos not in self.fire and
                     pos != self.pos and
-                    pos not in rocks_pos
+                    pos not in [r.pos for r in rocks]
                 ):  # Make sure we don't fire on ourselves and prevent fire through rocks
                     self.fire.append(pos)
                 else:
