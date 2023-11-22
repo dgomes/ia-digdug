@@ -68,7 +68,7 @@ class Rope:
             self._dir = None
             return
         
-        for e in _enemies:       # rope caught fire
+        for e in _enemies:  # rope caught fire
             if e.name == 'Fygar' and e.fire and self._pos in e.fire:
                 self._pos = []
                 self._dir = None
