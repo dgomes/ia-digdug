@@ -68,7 +68,7 @@ class Rope:
             return self.__reset_rope()
         
         for e in _enemies:  # rope caught fire
-            if type(e) == Fygar and e.fire and self._pos in e.fire:
+            if type(e) == Fygar and e.fire and len(set(self._pos) & set(e.fire))>0:
                 return self.__reset_rope()
             
         self._pos.append(new_pos)
