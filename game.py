@@ -47,7 +47,7 @@ class Rope:
     def to_dict(self):
         return {"dir": self._dir, "pos": self._pos}
 
-    def shoot(self, pos, direction, _rocks):
+    def shoot(self, pos, direction, _rocks, _enemies):
         if self._dir and direction != self._dir:
             self._pos = []  # reset rope because digdug changed direction
             self._dir = None
@@ -67,6 +67,13 @@ class Rope:
             self._pos = []
             self._dir = None
             return
+        
+        for e in _enemies:       # rope caught fire
+            if e.name == 'Fygar' and e.fire and self._pos in e.fire:
+                self._pos = []
+                self._dir = None
+                return
+            
         self._pos.append(new_pos)
 
         self._dir = direction
@@ -179,7 +186,7 @@ class Game:
                 # Parse action
                 if self._lastkeypress in "AB":
                     self._rope.shoot(
-                        self._digdug.pos, self._digdug.direction, self._rocks
+                        self._digdug.pos, self._digdug.direction, self._rocks, self._enemies
                     )
                     if self._rope.hit(self._enemies):
                         logger.debug(
