@@ -40,6 +40,11 @@ class Rope:
         self._dir = None
         self._map = mapa
 
+    def __reset_rope(self):
+        self._pos = []
+        self._dir = None
+        return
+
     @property
     def stretched(self):
         return self._pos != []
@@ -47,11 +52,9 @@ class Rope:
     def to_dict(self):
         return {"dir": self._dir, "pos": self._pos}
 
-    def shoot(self, pos, direction, _rocks):
+    def shoot(self, pos, direction, _rocks, _enemies):
         if self._dir and direction != self._dir:
-            self._pos = []  # reset rope because digdug changed direction
-            self._dir = None
-            return
+            return self.__reset_rope()  # reset rope because digdug changed direction
 
         if len(self._pos) > 0:
             new_pos = self._map.calc_pos(self._pos[-1], direction, traverse=False)
@@ -59,14 +62,15 @@ class Rope:
             new_pos = self._map.calc_pos(pos, direction, traverse=False)
 
         if new_pos in [r.pos for r in _rocks]:  # we hit a rock
-            self._pos = []
-            self._dir = None
-            return
+            return self.__reset_rope()
 
         if new_pos in self._pos:  # we hit a wall
-            self._pos = []
-            self._dir = None
-            return
+            return self.__reset_rope()
+        
+        for e in _enemies:  # rope caught fire
+            if isinstance(e,Fygar) and e.fire and any(p in self._pos for p in e.fire):
+                return self.__reset_rope()
+            
         self._pos.append(new_pos)
 
         self._dir = direction
@@ -179,7 +183,7 @@ class Game:
                 # Parse action
                 if self._lastkeypress in "AB":
                     self._rope.shoot(
-                        self._digdug.pos, self._digdug.direction, self._rocks
+                        self._digdug.pos, self._digdug.direction, self._rocks, self._enemies
                     )
                     if self._rope.hit(self._enemies):
                         logger.debug(
