@@ -159,7 +159,7 @@ class Game:
         self._enemies = [
             enemy(
                 pos,
-                smart=random.choices(list(Smart), [1, level // 10, level // 20], k=1)[
+                smart=random.choices(list(Smart), [1, level // 7, level // 14], k=1)[
                     0
                 ],
             )
