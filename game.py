@@ -8,11 +8,12 @@ from mapa import VITAL_SPACE, Map
 from consts import Smart, LIVES, TIMEOUT, MAX_LEN_ROPE, MIN_ENEMIES
 
 logger = logging.getLogger("Game")
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 INITIAL_SCORE = 0
 GAME_SPEED = 10
 MAP_SIZE = (48, 24)
+
 
 def level_enemies(level):
     level += MIN_ENEMIES
@@ -39,21 +40,37 @@ class Rope:
         self._dir = None
         self._map = mapa
 
-    def shoot(self, pos, direction):
+    def __reset_rope(self):
+        self._pos = []
+        self._dir = None
+        return
+
+    @property
+    def stretched(self):
+        return self._pos != []
+
+    def to_dict(self):
+        return {"dir": self._dir, "pos": self._pos}
+
+    def shoot(self, pos, direction, _rocks, _enemies):
         if self._dir and direction != self._dir:
-            self._pos = []  # reset rope because digdug changed direction
-            self._dir = None
-            return
+            return self.__reset_rope()  # reset rope because digdug changed direction
 
         if len(self._pos) > 0:
             new_pos = self._map.calc_pos(self._pos[-1], direction, traverse=False)
         else:
             new_pos = self._map.calc_pos(pos, direction, traverse=False)
 
+        if new_pos in [r.pos for r in _rocks]:  # we hit a rock
+            return self.__reset_rope()
+
         if new_pos in self._pos:  # we hit a wall
-            self._pos = []
-            self._dir = None
-            return
+            return self.__reset_rope()
+        
+        for e in _enemies:  # rope caught fire
+            if isinstance(e,Fygar) and e.fire and any(p in self._pos for p in e.fire):
+                return self.__reset_rope()
+            
         self._pos.append(new_pos)
 
         self._dir = direction
@@ -66,11 +83,11 @@ class Rope:
 
         for e in enemies:
             if e.pos in self._pos:
-                e.kill() # kill enemy
+                e.kill()  # kill enemy
 
-                #remove rope after hit
+                # remove rope after hit
                 rope_index = self._pos.index(e.pos)
-                self._pos = self._pos[:rope_index + 1]
+                self._pos = self._pos[: rope_index + 1]
 
                 return True
         return False
@@ -90,6 +107,7 @@ class Game:
         self.map = Map(size=size, empty=True)
         self._enemies = []
         self._rope = Rope(self.map)
+        self.respawn = False
 
     @property
     def level(self):
@@ -141,14 +159,14 @@ class Game:
         self._enemies = [
             enemy(
                 pos,
-                smart=random.choices(
-                    list(Smart), [1, level // 10, level // 20], k=1
-                )[0],
+                smart=random.choices(list(Smart), [1, level // 7, level // 14], k=1)[
+                    0
+                ],
             )
             for enemy, pos in zip(level_enemies(level), self.map.enemies_spawn)
         ]
-        logger.debug("Enemies: %s", [(e._name, e.pos) for e in self._enemies])
-        self._rocks = [Rock(p) for p in self.map._rocks]
+        logger.debug("Enemies: %s", self._enemies)
+        self._rocks = [Rock(p) for p in self.map.rocks_spawn]
 
     def quit(self):
         logger.debug("Quit")
@@ -164,9 +182,17 @@ class Game:
             if self._lastkeypress.isupper():
                 # Parse action
                 if self._lastkeypress in "AB":
-                    self._rope.shoot(self._digdug.pos, self._digdug.direction)
+                    self._rope.shoot(
+                        self._digdug.pos, self._digdug.direction, self._rocks, self._enemies
+                    )
                     if self._rope.hit(self._enemies):
-                        logger.debug("Enemy hit with rope")
+                        logger.debug(
+                            "[step=%s] Enemy hit with rope(%s) - enemies: %s - digdug: %s",
+                            self._step,
+                            self._rope.to_dict(),
+                            self._enemies,
+                            self._digdug,
+                        )
             else:
                 # if digdug moves we let go of the rope
                 if self._lastkeypress in "wasd" and self._lastkeypress != "":
@@ -189,33 +215,49 @@ class Game:
 
         if len(self._enemies) == 0:
             logger.info(f"Level {self.map.level} completed")
-            self._score += (self.map.level * TIMEOUT - self._total_steps) // 10 # update score before new level
+            self._score += (
+                self.map.level * TIMEOUT - self._total_steps
+            ) // 10  # update score before new level
             self.next_level(self.map.level + 1)
+            return False
+        return True
 
     def kill_digdug(self):
-        logger.info(f"Dig Dug has died on step: {self._step}")
+        if self.respawn:    #we are already dead, no need to kill again
+            return
+        logger.info("[step=%s] Dig Dug has died", self._step)
         self._digdug.kill()
-        logger.debug(f"Dig Dug has now {self._digdug.lives} lives")
+        logger.debug(
+            "[step=%s] Dig Dug has now %s lives", self._step, self._digdug.lives
+        )
         if self._digdug.lives > 0:
             logger.debug("RESPAWN")
-            self._digdug.respawn()
-            for e in self._enemies:
-                if math.dist(self._digdug.pos, e.pos) < VITAL_SPACE:
-                    logger.debug("respawn camper")
-                    e.respawn()
+            self.respawn = True
         else:
             self.stop()
 
     def collision(self):
+        if (
+            not self._running
+        ):  # if game is not running, we don't need to check collisions
+            return
         for e in self._enemies:
             if e.pos == self._digdug.pos:
+                logger.debug("[step=%s] %s has killed %s", self._step, e, self._digdug)
                 self.kill_digdug()
                 e.respawn()
             if e._name == "Fygar" and e.fire:
                 if self._digdug.pos in e.fire:
+                    logger.debug(
+                        "[step=%s] %s has killed %s with fire",
+                        self._step,
+                        e,
+                        self._digdug,
+                    )
                     self.kill_digdug()
         for r in self._rocks:
             if r.pos == self._digdug.pos:
+                logger.debug("[step=%s] %s has killed %s", self._step, r, self._digdug)
                 self.kill_digdug()
             for e in self._enemies:
                 if r.pos == e.pos:
@@ -229,6 +271,14 @@ class Game:
             logger.info("Waiting for player 1")
             return
 
+        if self.respawn:
+            self._digdug.respawn()
+            for e in self._enemies:
+                if math.dist(self._digdug.pos, e.pos) < VITAL_SPACE:
+                    logger.debug("respawn camper")
+                    e.respawn()
+            self.respawn = False
+
         self._step += 1
         if self._step == self._timeout:
             self.stop()
@@ -238,14 +288,23 @@ class Game:
                 f"[{self._step}] SCORE {self._score} - LIVES {self._digdug.lives}"
             )
 
-        self.update_digdug()
+        if not self.update_digdug():
+            return  # if update_digdug returns false, we have a new level and we stop right here
 
         self.collision()
 
         for enemy in self._enemies:
             if enemy.alive:
                 enemy.move(self.map, self._digdug, self._enemies, self._rocks)
-
+        if self._rope.stretched and self._rope.hit(self._enemies):
+            logger.debug(
+                "[step=%s] Enemy hit with rope(%s) - enemies: %s - digdug: %s",
+                self._step,
+                self._rope.to_dict(),
+                self._enemies,
+                self._digdug,
+            )
+ 
         for rock in self._rocks:
             rock.move(self.map, digdug=self._digdug, rocks=self._rocks)
 
@@ -267,20 +326,18 @@ class Game:
             "lives": self._digdug.lives,
             "digdug": self._digdug.pos,
             "enemies": [],
-            "rocks": [{"id": str(r.id), "pos": r.pos} for r in self._rocks],
+            "rocks": [r.to_dict() for r in self._rocks],
         }
 
         for e in self._enemies:
-            self._state["enemies"].append(
-                {"name": str(e), "id": str(e.id), "pos": e.pos, "dir": e.lastdir}
-            )
-            if e._name == "Fygar" and e.fire:
+            self._state["enemies"].append(e.to_dict())
+            if e.name == "Fygar" and e.fire:
                 self._state["enemies"][-1]["fire"] = e.fire
             if e.traverse:
                 self._state["enemies"][-1]["traverse"] = e.traverse
 
-        if self._rope._pos:
-            self._state["rope"] = {"dir": self._rope._dir, "pos": self._rope._pos}
+        if self._rope.stretched:
+            self._state["rope"] = self._rope.to_dict()
 
         return self._state
 
