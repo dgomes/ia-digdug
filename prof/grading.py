@@ -1,6 +1,9 @@
 import logging
 import os
 
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+
 from flask import Flask, jsonify, request, send_from_directory
 from flask_marshmallow import Marshmallow
 from flask_sqlalchemy import SQLAlchemy
@@ -12,10 +15,17 @@ GRADES_FILE = "grades.sqlite"
 app = Flask(__name__, static_url_path="")
 basedir = os.path.abspath(os.path.dirname(__file__))
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(
-    basedir, GRADES_FILE
-)
+        basedir, GRADES_FILE
+        )
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
+
+limiter = Limiter(
+        get_remote_address,
+        app=app,
+        default_limits=["1  per 30 second"],
+        storage_uri="memory://",
+        )
 
 flask_log = logging.getLogger("werkzeug")
 flask_log.setLevel(logging.WARNING)
@@ -57,13 +67,19 @@ def index():
 def add_game():
     if new_game := request.json:
         logger.info(
-            "Player: %s, Score: %s", new_game.get("player"), new_game.get("score")
-        )
+                "Player: %s, Score: %s", new_game.get("player"), new_game.get("score")
+                )
+        try:
+            int(new_game.get("score"))
+            int(new_game.get("level"))
+        except:
+            return jsonify({"error": "poor soul..."})
+
         new_game = Game(
-            new_game.get("player"),
-            new_game.get("level"),
-            new_game.get("score"),
-        )
+                new_game.get("player"),
+                new_game.get("level"),
+                new_game.get("score"),
+                )
 
         db.session.add(new_game)
         db.session.commit()
@@ -75,26 +91,28 @@ def add_game():
 
 # Serve static files
 @app.route("/static/<path:path>")
+@limiter.exempt
 def send_static(path):
     return send_from_directory("static", path)
 
 
 # endpoint to show highscores
 @app.route("/highscores", methods=["GET"])
+@limiter.exempt
 def get_game():
     page = request.args.get("page", 1, type=int)
 
     q = (
-        db.session.query(
-            Game.id,
-            Game.timestamp,
-            Game.player,
-            Game.level,
-            func.max(Game.score).label("score"),
-        )
-        .group_by(Game.player)
-        .order_by(Game.score.desc(), Game.timestamp.desc())
-    )
+            db.session.query(
+                Game.id,
+                Game.timestamp,
+                Game.player,
+                Game.level,
+                func.max(Game.score).label("score"),
+                )
+            .group_by(Game.player)
+            .order_by(Game.score.desc(), Game.timestamp.desc())
+            )
     logger.debug(q)
 
     all_games = q.paginate(page=page, per_page=20, error_out=False)
@@ -107,11 +125,11 @@ def get_game():
 @app.route("/highscores/<player>", methods=["GET"])
 def game_detail(player):
     game = (
-        db.session.query(Game)
-        .filter(and_(Game.player == player, Game.score > 0))
-        .order_by(Game.score.desc())
-        .limit(10)
-    )
+            db.session.query(Game)
+            .filter(and_(Game.player == player, Game.score > 0))
+            .order_by(Game.score.desc())
+            .limit(10)
+            )
     logger.debug(q)
 
     result = ALL_GAME_SCHEMA.dump(game)
