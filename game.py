@@ -87,7 +87,7 @@ class Rope:
 
                 # remove rope after hit
                 rope_index = self._pos.index(e.pos)
-                self._pos = self._pos[: rope_index + 1]
+                self._pos = self._pos[: rope_index]
 
                 return True
         return False
